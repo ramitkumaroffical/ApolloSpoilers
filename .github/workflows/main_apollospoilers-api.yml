@@ -21,16 +21,13 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
-
-      - name: Restore dependencies
-       run: dotnet restore backend/src/ApolloSpoilers.Api/ApolloSpoilers.Api.csproj
+          dotnet-version: '9.x'
 
       - name: Build with dotnet
-        run: dotnet build backend/src/ApolloSpoilers.Api/ApolloSpoilers.Api.csproj --configuration Release
+        run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run:  dotnet publish backend/src/ApolloSpoilers.Api/ApolloSpoilers.Api.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -54,9 +51,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0C1CA429CECA4D35A5EF86F09EFF1B82 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_719446415E814774ADCB53082C1D4315 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4ECE9E38A901426A9D11BE30AD817368 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D737980F580E4A419FDDE62D2471D33A }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_BF26D3719CDF4A5AA3752DEAAC23F2A1 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6DCC9695A746422FA8243B8A20D2134E }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
