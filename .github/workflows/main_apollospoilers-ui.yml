@@ -22,10 +22,8 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: Debug - list files
-        run: ls -la
-
       - name: npm install, build, and test
+        working-directory: ./apollo-spoilers
         run: |
           npm install
           npm run build --if-present
@@ -35,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: ./apollo-spoilers
 
   deploy:
     runs-on: ubuntu-latest
