@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080a0d"/>
+      <stop offset="50%" stop-color="#12151b"/>
+      <stop offset="100%" stop-color="#1a1d24"/>
+    </linearGradient>
+    <linearGradient id="wing" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff3d1f"/>
+      <stop offset="100%" stop-color="#ffb020"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff3d1f" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#ff3d1f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Decorative speed lines -->
+  <g opacity="0.06" stroke="#ff3d1f" stroke-width="2">
+    <line x1="0" y1="80" x2="1200" y2="80"/>
+    <line x1="0" y1="160" x2="1200" y2="160"/>
+    <line x1="0" y1="470" x2="1200" y2="470"/>
+    <line x1="0" y1="550" x2="1200" y2="550"/>
+  </g>
+
+  <!-- GT Wing mark -->
+  <g transform="translate(600, 220)">
+    <path d="M -180 40 Q 0 -60 180 40 L 180 80 Q 0 -20 -180 80 Z" fill="url(#wing)"/>
+    <rect x="-110" y="40" width="12" height="55" rx="3" fill="#ff3d1f"/>
+    <rect x="98" y="40" width="12" height="55" rx="3" fill="#ff3d1f"/>
+  </g>
+
+  <!-- Main brand text -->
+  <text x="600" y="400" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="800" fill="#ffffff" letter-spacing="4">APOLLO SPOILERS</text>
+
+  <!-- Tagline -->
+  <text x="600" y="460" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="400" fill="#ffb020" letter-spacing="2">Premium Car Spoilers · GT Wings · Aero Styling</text>
+
+  <!-- Trust badges row -->
+  <g transform="translate(600, 530)" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#a0a8b0">
+    <text x="-360" y="0" text-anchor="middle">★ India's #1</text>
+    <text x="-120" y="0" text-anchor="middle">🚚 Free Shipping</text>
+    <text x="120" y="0" text-anchor="middle">🛡️ 1-Year warranty</text>
+    <text x="360" y="0" text-anchor="middle">⚙️ 150+ Car Models</text>
+  </g>
+</svg>

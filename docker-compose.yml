@@ -1,0 +1,107 @@
+name: apollo-spoilers
+
+services:
+  # ---------- SQL Server 2022 ----------
+  sqlserver:
+    image: ${SQL_IMAGE:-mcr.microsoft.com/mssql/server:2022-latest}
+    container_name: apollo-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-YourStrong!Passw0rd123}
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - apollo-net
+
+  # ---------- Qdrant vector DB ----------
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: apollo-qdrant
+    ports:
+      - "6333:6333"   # REST
+      - "6334:6334"   # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - apollo-net
+
+  # ---------- Ollama (local OpenAI-compatible LLM) ----------
+  # Optional: comment out if using Groq/OpenAI remotely.
+  # After `docker compose up`, run once to pull the models:
+  #   docker exec -it apollo-ollama ollama pull llama3
+  #   docker exec -it apollo-ollama ollama pull nomic-embed-text
+  ollama:
+    image: ollama/ollama:latest
+    container_name: apollo-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - apollo-net
+
+  # ---------- Backend API ----------
+  api:
+    build:
+      context: ./backend
+      dockerfile: src/ApolloSpoilers.Api/Dockerfile
+    container_name: apollo-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_URLS: ${ASPNETCORE_URLS:-http://+:8080}
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
+      Jwt__Secret: ${Jwt__Secret}
+      Ai__Llm__BaseUrl: ${Ai__Llm__BaseUrl:-http://ollama:11434/v1}
+      Ai__Llm__ApiKey: ${Ai__Llm__ApiKey:-ollama-local}
+      Ai__Llm__Model: ${Ai__Llm__Model:-llama3}
+      Ai__Embedding__BaseUrl: ${Ai__Embedding__BaseUrl:-http://ollama:11434/v1}
+      Ai__Embedding__Model: ${Ai__Embedding__Model:-nomic-embed-text}
+      Ai__Qdrant__Endpoint: ${Ai__Qdrant__Endpoint:-http://qdrant:6333}
+      Email__Host: ${Email__Host:-smtp.example.com}
+      Email__Port: ${Email__Port:-587}
+      Email__Username: ${Email__Username:-}
+      Email__Password: ${Email__Password:-}
+      Email__From: ${Email__From:-no-reply@apollospoilers.com}
+      Email__FromName: ${Email__FromName:-Apollo Spoilers}
+      Email__EnableSsl: ${Email__EnableSsl:-true}
+      App__FrontendUrl: ${App__FrontendUrl:-http://localhost:4200}
+    ports:
+      - "8080:8080"
+    networks:
+      - apollo-net
+
+  # ---------- Frontend (Angular served via nginx) ----------
+  web:
+    build:
+      context: ./apollo-spoilers
+      dockerfile: Dockerfile
+    container_name: apollo-web
+    depends_on:
+      - api
+    ports:
+      - "4200:80"
+    networks:
+      - apollo-net
+
+volumes:
+  sqlserver_data:
+  qdrant_data:
+  ollama_data:
+
+networks:
+  apollo-net:
+    driver: bridge

@@ -1,0 +1,18 @@
+# Apollo Spoilers — robots.txt
+# Allow crawling of public/product pages, block private/account pages
+
+User-agent: *
+Allow: /
+Allow: /assets/
+
+# Private & user-account pages — never index
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /wishlist
+Disallow: /login
+Disallow: /register
+
+# Sitemap location
+Sitemap: https://apollospoilers.com/sitemap.xml

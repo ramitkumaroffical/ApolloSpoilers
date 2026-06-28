@@ -1,0 +1,175 @@
+<!-- ===== HERO ===== -->
+<section class="about-hero">
+  <div class="hero-bar"></div>
+  <div class="hero-content">
+    <div class="eyebrow">Our Story</div>
+    <h1>Born on the Track.<br>Built for the Street.</h1>
+    <p class="hero-sub">Apollo Spoilers engineers premium exterior aero components that merge motorsport-grade
+      performance with OEM-level fitment. Every piece is designed to turn heads — and cut air.</p>
+    <a mat-flat-button color="primary" class="hero-cta" routerLink="/">
+      <mat-icon>storefront</mat-icon> Shop Now
+    </a>
+  </div>
+</section>
+
+<!-- ===== BRAND STORY ===== -->
+<section class="story">
+  <div class="story-grid">
+    <div class="story-text">
+      <div class="eyebrow">Why Apollo</div>
+      <h2>Engineered with Obsession</h2>
+      <p>We started Apollo because we were tired of choosing between aero that looks good and aero that actually works.
+        Every spoiler, wing, and splitter in our catalog is developed using computational fluid dynamics, validated on
+        track, and stress-tested across real-world conditions.</p>
+      <p>Our materials — autoclave-cured carbon fiber, aerospace-grade aluminum, UV-stable ABS — aren't chosen for cost.
+        They're chosen because they hold up at 150 mph, under brutal sun, and through years of daily driving.</p>
+      <div class="story-stats">
+        <div class="stat">
+          <span class="stat-value">10K+</span>
+          <span class="stat-label">Spoilers Shipped</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">98%</span>
+          <span class="stat-label">Fit Rating</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">5yr</span>
+          <span class="stat-label">Warranty</span>
+        </div>
+      </div>
+    </div>
+    <div class="story-visual">
+      <div class="visual-card">
+        <div class="gauge-hero">
+          <span class="gauge-mark hero-gauge"></span>
+        </div>
+        <div class="accent-line"></div>
+        <div class="visual-tag">Performance Styling Since 2020</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== VALUE PROPS ===== -->
+<section class="value-props">
+  <h2 class="section-title">The Apollo Difference</h2>
+  <div class="props-grid">
+    <mat-card class="prop-card">
+      <mat-icon class="prop-icon">precision_manufacturing</mat-icon>
+      <h3>Precision Engineering</h3>
+      <p>3D-scanned vehicle data, CAD-optimized profiles, and CNC-machined mounting hardware ensure millimeter-perfect
+        fitment every time.</p>
+    </mat-card>
+    <mat-card class="prop-card">
+      <mat-icon class="prop-icon">timer</mat-icon>
+      <h3>Track-Proven Design</h3>
+      <p>Every wing profile is wind-tunnel validated. We test at Speed Vegas and Buttonwillow so our customers never
+        have to wonder if their aero is functional.</p>
+    </mat-card>
+    <mat-card class="prop-card">
+      <mat-icon class="prop-icon">verified</mat-icon>
+      <h3>Perfect Fit Guarantee</h3>
+      <p>Pre-drilled holes, plug-and-play brackets, and paint-ready surfaces. If it doesn't fit, we make it right — no
+        questions asked.</p>
+    </mat-card>
+  </div>
+</section>
+
+<!-- ===== FEATURED SPOILERS ===== -->
+<section class="featured-section">
+  <div class="section-header">
+    <h2 class="section-title">Featured Spoilers</h2>
+    <p class="section-sub">Hand-picked favorites from our latest collection.</p>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-text">Loading featured products...</div>
+  } @else if (featured().length === 0) {
+  <div class="empty-text">Check back soon — new arrivals are on the way.</div>
+  } @else {
+  <div class="featured-grid">
+    @for (p of featured(); track p.id) {
+    <mat-card class="featured-card">
+      <a [routerLink]="['/products', p.slug]" class="featured-img-link">
+        <img [src]="environment.imageUrl + p.primaryImageUrl" [alt]="p.name" class="featured-img"
+          (load)="$event.target.classList.add('loaded')">
+      </a>
+      <mat-card-content>
+        <div class="featured-category">{{ p.categoryName }}</div>
+        <a [routerLink]="['/products', p.slug]" class="featured-name">{{ p.name }}</a>
+        <div class="featured-meta">
+          @if (p.carBrand) { <span class="fit-badge">{{ p.carBrand }} {{ p.carModel }}</span> }
+        </div>
+        <div class="featured-price-row">
+          <span class="price">₹{{ p.price.toFixed(2) }}</span>
+          @if (p.compareAtPrice && p.compareAtPrice > p.price) {
+          <span class="price-compare">₹{{ p.compareAtPrice.toFixed(2) }}</span>
+          }
+        </div>
+        @if (p.averageRating > 0) {
+        <div class="rating">★ {{ p.averageRating.toFixed(1) }} ({{ p.reviewCount }})</div>
+        }
+      </mat-card-content>
+    </mat-card>
+    }
+  </div>
+  }
+</section>
+
+<!-- ===== SPOILER TYPES ===== -->
+<section class="types-section">
+  <div class="eyebrow">Explore Categories</div>
+  <h2 class="section-title">Types of High-Quality Spoilers</h2>
+  <p class="types-intro">From subtle lip spoilers to aggressive GT wings, we cover the full spectrum of exterior aero.
+  </p>
+
+  <div class="types-grid">
+    @for (t of spoilerTypes; track t.title) {
+    <mat-card class="type-card">
+      <mat-icon class="type-icon">{{ t.icon }}</mat-icon>
+      <h3>{{ t.title }}</h3>
+      <p>{{ t.desc }}</p>
+      <a mat-stroked-button color="primary" class="type-link" routerLink="/">{{ t.title }} →</a>
+    </mat-card>
+    }
+  </div>
+</section>
+
+<!-- ===== AasRa AI CALLOUT ===== -->
+<section class="ai-section">
+  <div class="ai-content">
+    <div class="msg-avatar">
+      <img src="/assets/aasra-avatar.svg" alt="AasRa avatar" class="aasra-img tiny">
+    </div>
+    <div class="ai-text">
+      <div class="eyebrow">Meet Your Styling Assistant</div>
+      <h2>AasRa AI</h2>
+      <p>Not sure which spoiler fits your car? AasRa is an AI-powered assistant trained on our entire catalog. It can
+        recommend the perfect aero upgrade, check fitment by year and model, compare materials, and even suggest
+        complete styling packages — all in a natural conversation.</p>
+      <div class="ai-features">
+        <span class="ai-chip"><mat-icon>check_circle</mat-icon> Compatibility matching</span>
+        <span class="ai-chip"><mat-icon>check_circle</mat-icon> Product comparisons</span>
+        <span class="ai-chip"><mat-icon>check_circle</mat-icon> Style recommendations</span>
+      </div>
+      <p class="ai-hint">Look for the <strong class="accent-text">spark icon</strong> at the bottom-right of any page to
+        start chatting.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA BANNER ===== -->
+<section class="cta-banner">
+  <div class="cta-content">
+    <h2>Ready to Transform Your Ride?</h2>
+    <p>Browse our full catalog of premium spoilers, wings, and aero kits — engineered for your car.</p>
+    <div class="cta-buttons">
+      <a mat-flat-button color="primary" class="hero-cta" routerLink="/">
+        <mat-icon>storefront</mat-icon> Browse Catalog
+      </a>
+      <a mat-stroked-button class="hero-cta-outline" routerLink="/register">
+        <mat-icon>person_add</mat-icon> Create Account
+      </a>
+    </div>
+  </div>
+</section>

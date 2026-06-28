@@ -1,0 +1,145 @@
+<!-- Floating launcher -->
+@if (!isOpen()) {
+  <button class="launcher" (click)="toggle()" aria-label="Chat with AasRa">
+    <span class="launcher-ring" aria-hidden="true"></span>
+    <span class="launcher-ring launcher-ring-2" aria-hidden="true"></span>
+    <span class="launcher-avatar">
+      <img src="/assets/aasra-avatar.svg" alt="AasRa avatar" class="aasra-img">
+    </span>
+    <span class="launcher-label">Ask AasRa</span>
+    <span class="launcher-tooltip">Need help choosing a spoiler?</span>
+  </button>
+}
+
+<!-- Chat panel -->
+@if (isOpen()) {
+  <div class="panel">
+    <div class="header-glow"></div>
+    <div class="header">
+      <div class="header-left">
+        <div class="header-avatar">
+          <img src="/assets/aasra-avatar.svg" alt="AasRa avatar" class="aasra-img small">
+        </div>
+        <div class="header-titles">
+          <span class="title">AasRa AI</span>
+          <span class="status">
+            <span class="status-dot" aria-hidden="true"></span>
+            Online — ready to help
+          </span>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="ai-badge">AI</span>
+        <button mat-icon-button class="close-btn" (click)="toggle()" aria-label="Minimize chat">
+          <mat-icon>remove</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="messages" #scrollContainer>
+      @if (messages().length === 0) {
+        <div class="welcome">
+          <div class="welcome-avatar">
+            <img src="/assets/aasra-avatar.svg" alt="AasRa avatar" class="aasra-img large">
+          </div>
+          <h3>Hey there! I'm AasRa 👋</h3>
+          <p class="welcome-sub">Your AI-powered styling assistant. I can help you find the perfect spoiler, check fitment, compare products, and more.</p>
+          <div class="welcome-divider"></div>
+          <p class="welcome-hint">Try asking:</p>
+          <div class="suggestions">
+            <button class="suggestion-chip" (click)="send('Which spoiler fits in Honda City Premium Sedan 2024?')">
+              <mat-icon>directions_car</mat-icon>
+              <span>Which spoiler fits in Honda City Premium Sedan 2024?</span>
+            </button>
+            <button class="suggestion-chip" (click)="send('Monster ABS spoiler for Maruti Suzuki Fronx.')">
+              <mat-icon>speed</mat-icon>
+              <span>Monster ABS spoiler for Maruti Suzuki Fronx.</span>
+            </button>
+            <button class="suggestion-chip" (click)="send('Batman ABS spoiler for Maruti Suzuki Swift.')">
+              <mat-icon>auto_awesome</mat-icon>
+              <span>Batman ABS spoiler for Maruti Suzuki Swift.</span>
+            </button>
+            <button class="suggestion-chip" (click)="send('Hyundai Verna ABS spoiler — price and options?')">
+              <mat-icon>compare_arrows</mat-icon>
+              <span>Hyundai Verna ABS spoiler — price and options?</span>
+            </button>
+          </div>
+          @if (!auth.isAuthenticated()) {
+            <p class="guest-hint">
+              <mat-icon>person_outline</mat-icon>
+              <a routerLink="/login" (click)="toggle()">Sign in</a> to save your chat history.
+            </p>
+          }
+        </div>
+      }
+
+      @for (msg of messages(); track $index) {
+        <div class="msg" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'" [class.error]="!!msg.retry">
+          @if (msg.role === 'assistant') {
+            <div class="msg-avatar" [class.error-avatar]="!!msg.retry">
+              <img src="/assets/aasra-avatar.svg" alt="AasRa avatar" class="aasra-img tiny">
+            </div>
+          }
+          <div class="bubble" [class.error-bubble]="!!msg.retry">
+            <p>{{ msg.content }}</p>
+            @if (msg.sources && msg.sources.length > 0) {
+              <div class="sources">
+                <span class="sources-label">
+                  <mat-icon>inventory_2</mat-icon> Related Products
+                </span>
+                <div class="source-items">
+                  @for (s of msg.sources; track $index) {
+                    @if (s.productSlug) {
+                      <a [routerLink]="['/products', s.productSlug]" class="source-link" (click)="toggle()">
+                        <mat-icon>open_in_new</mat-icon>
+                        <span>{{ s.productName }}</span>
+                      </a>
+                    } @else {
+                      <span class="source-link">
+                        <mat-icon>tag</mat-icon>
+                        <span>{{ s.productName }}</span>
+                      </span>
+                    }
+                  }
+                </div>
+              </div>
+            }
+            @if (msg.retry) {
+              <button class="retry-btn" (click)="msg.retry()">
+                <mat-icon>refresh</mat-icon> Try again
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="msg assistant">
+          <div class="msg-avatar">
+            <img src="/assets/aasra-avatar.svg" alt="AasRa avatar" class="aasra-img tiny">
+          </div>
+          <div class="bubble typing">
+            <div class="typing-indicator">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+            <span class="typing-text">AasRa is thinking...</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="input-area">
+      <div class="input-wrap">
+        <input [(ngModel)]="draft" (keyup.enter)="send()"
+               placeholder="Ask about spoilers, fitment, recommendations..."
+               [disabled]="loading()" class="input" aria-label="Message input">
+        <button class="send-btn" (click)="send()" [disabled]="loading() || !draft.trim()" aria-label="Send">
+          <mat-icon>arrow_upward</mat-icon>
+        </button>
+      </div>
+      <p class="input-disclaimer">AasRa AI may make mistakes. Verify product fitment before purchasing.</p>
+    </div>
+  </div>
+}

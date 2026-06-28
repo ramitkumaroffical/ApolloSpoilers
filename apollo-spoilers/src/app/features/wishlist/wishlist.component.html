@@ -1,0 +1,35 @@
+<h1 class="section-title">Your Wishlist</h1>
+@if (loading()) {
+  <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate" diameter="44" color="accent"></mat-progress-spinner>
+    <p>Loading your wishlist...</p>
+  </div>
+} @else if (!items() || items()!.items.length === 0) {
+  <div class="empty">
+    <mat-icon>favorite_border</mat-icon>
+    <p>Your wishlist is empty.</p>
+    <button mat-flat-button color="primary" routerLink="/">Browse Products</button>
+  </div>
+} @else {
+  <div class="card-grid">
+    @for (item of items()!.items; track item.id) {
+      <mat-card class="card">
+        <a [routerLink]="['/products', item.productSlug]" class="img-link">
+          <img [src]="(environment.imageUrl + item.primaryImageUrl) || '/assets/placeholder.svg'" [alt]="item.productName" class="img"
+               (load)="$event.target.classList.add('loaded')"
+               (error)="$event.target.src = '/assets/placeholder.svg'">
+        </a>
+        <mat-card-content>
+          <a [routerLink]="['/products', item.productSlug]" class="name">{{ item.productName }}</a>
+          <div class="price">₹{{ item.price.toFixed(2) }}</div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-flat-button color="primary" (click)="add(item.productId, item.productName)">
+            <mat-icon>cart</mat-icon> Add to Cart
+          </button>
+          <button mat-icon-button color="warn" (click)="remove(item.productId)"><mat-icon>favorite</mat-icon></button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}

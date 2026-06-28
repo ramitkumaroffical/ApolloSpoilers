@@ -1,0 +1,15 @@
+.welcome { color: var(--apollo-muted); margin-top: -0.5rem; margin-bottom: 1.5rem; }
+.tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+mat-card { padding: 1.5rem; overflow-x: auto; }
+h3 { margin-top: 0; color: var(--apollo-text); }
+.full-table { width: 100%; }
+.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 3rem 2rem; color: var(--apollo-muted); }
+.loading-state p { margin: 0; font-size: 0.9rem; }
+.empty { text-align: center; padding: 3rem; color: var(--apollo-muted); }
+.status-select { width: 140px; }
+.empty { text-align: center; padding: 2rem; color: var(--apollo-muted); }
+.admin-pay-tag {
+  display: inline-block; font-size: 0.8rem; font-weight: 600;
+  color: var(--apollo-accent); background: rgba(255, 61, 31, 0.1);
+  padding: 0.2rem 0.55rem; border-radius: 5px;
+}

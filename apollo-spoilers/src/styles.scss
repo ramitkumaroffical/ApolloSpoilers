@@ -1,0 +1,423 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+$custom-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+  )
+));
+
+:root {
+  @include mat.all-component-themes($custom-theme);
+
+  --apollo-bg: #080a0d;
+  --apollo-bg-2: #0d1117;
+  --apollo-surface: #121821;
+  --apollo-surface-2: #19212c;
+  --apollo-panel: rgba(18, 24, 33, 0.9);
+  --apollo-border: rgba(255, 255, 255, 0.11);
+  --apollo-border-strong: rgba(255, 255, 255, 0.18);
+  --apollo-text: #eef3f8;
+  --apollo-muted: #94a3b8;
+  --apollo-soft: #c9d3df;
+  --apollo-accent: #ff3d1f;
+  --apollo-accent-2: #ffb020;
+  --apollo-success: #45d483;
+  --apollo-danger: #ff5c77;
+  --apollo-shadow: 0 18px 50px rgba(0, 0, 0, 0.46);
+  --apollo-glow: 0 0 24px rgba(255, 61, 31, 0.24);
+
+  --mat-app-background-color: var(--apollo-bg);
+  --mat-app-text-color: var(--apollo-text);
+  --mdc-elevated-card-container-color: var(--apollo-panel);
+  --mdc-outlined-card-container-color: var(--apollo-panel);
+  --mdc-outlined-card-outline-color: var(--apollo-border);
+  --mdc-filled-button-container-color: var(--apollo-accent);
+  --mdc-filled-button-label-text-color: #ffffff;
+  --mdc-protected-button-container-color: var(--apollo-accent);
+  --mdc-protected-button-label-text-color: #ffffff;
+  --mdc-outlined-button-outline-color: var(--apollo-border-strong);
+  --mdc-outlined-button-label-text-color: var(--apollo-text);
+  --mdc-text-button-label-text-color: var(--apollo-text);
+  --mdc-fab-container-color: var(--apollo-accent);
+  --mdc-fab-icon-color: #ffffff;
+  --mdc-icon-button-icon-color: var(--apollo-text);
+  --mdc-chip-elevated-container-color: rgba(255, 255, 255, 0.08);
+  --mdc-chip-label-text-color: var(--apollo-soft);
+  --mdc-filled-text-field-container-color: rgba(255, 255, 255, 0.06);
+  --mdc-outlined-text-field-outline-color: var(--apollo-border-strong);
+  --mdc-outlined-text-field-hover-outline-color: rgba(255, 176, 32, 0.7);
+  --mdc-outlined-text-field-focus-outline-color: var(--apollo-accent-2);
+  --mdc-outlined-text-field-label-text-color: var(--apollo-muted);
+  --mdc-outlined-text-field-input-text-color: var(--apollo-text);
+  --mat-select-enabled-trigger-text-color: var(--apollo-text);
+  --mat-option-label-text-color: var(--apollo-text);
+  --mat-menu-container-color: #111821;
+  --mat-table-background-color: transparent;
+  --mat-table-header-headline-color: var(--apollo-soft);
+  --mat-table-row-item-label-text-color: var(--apollo-text);
+  --mat-paginator-container-background-color: transparent;
+  --mat-paginator-container-text-color: var(--apollo-muted);
+}
+
+html {
+  color-scheme: dark;
+  background: var(--apollo-bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--apollo-text);
+  background:
+    radial-gradient(circle at 18% -10%, rgba(255, 61, 31, 0.2), transparent 32rem),
+    radial-gradient(circle at 86% 6%, rgba(255, 176, 32, 0.14), transparent 28rem),
+    linear-gradient(180deg, #0c1016 0%, #080a0d 42%, #0b0f14 100%);
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+a {
+  color: inherit;
+}
+
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 72px;
+  padding: 0 1.5rem;
+  color: var(--apollo-text) !important;
+  background:
+    linear-gradient(180deg, rgba(10, 13, 18, 0.98), rgba(9, 12, 16, 0.88)) !important;
+  border-bottom: 1px solid var(--apollo-border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-right: 2rem;
+  color: var(--apollo-text);
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  color: #ffffff;
+  place-items: center;
+  border: 1px solid rgba(255, 176, 32, 0.35);
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--apollo-accent), #861b12);
+  box-shadow: var(--apollo-glow);
+}
+
+.gauge-mark {
+  position: relative;
+  width: 20px;
+  height: 13px;
+  border: 3px solid currentColor;
+  border-bottom-color: transparent;
+  border-radius: 20px 20px 0 0;
+}
+
+.gauge-mark::after {
+  position: absolute;
+  right: 2px;
+  bottom: -1px;
+  width: 9px;
+  height: 3px;
+  content: '';
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(-36deg);
+  transform-origin: left center;
+}
+
+.cart-mark {
+  position: relative;
+  display: inline-block;
+  width: 24px;
+  height: 22px;
+  color: currentColor;
+}
+
+.cart-mark::before {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 15px;
+  height: 10px;
+  content: '';
+  border: 2px solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 4px 4px;
+  transform: skewX(-12deg);
+}
+
+.cart-mark::after {
+  position: absolute;
+  left: 6px;
+  bottom: 1px;
+  width: 4px;
+  height: 4px;
+  content: '';
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 11px 0 0 currentColor;
+}
+
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.brand-sub {
+  margin-top: 0.3rem;
+  color: var(--apollo-accent-2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.nav-links a,
+.app-toolbar > a[mat-button] {
+  color: var(--apollo-soft) !important;
+}
+
+.nav-links a.active,
+.nav-links a:hover,
+.app-toolbar > a[mat-button]:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.app-toolbar a[mat-raised-button] {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, var(--apollo-accent), #b72415) !important;
+  box-shadow: var(--apollo-glow);
+}
+
+.app-content {
+  width: min(1280px, calc(100% - 2rem));
+  min-height: calc(100vh - 72px);
+  margin: 0 auto;
+  padding: 2rem 0 4.5rem;
+}
+
+.menu-header {
+  padding: 0.85rem 1rem;
+  color: var(--apollo-soft);
+  font-weight: 600;
+  border-bottom: 1px solid var(--apollo-border);
+}
+
+.price {
+  color: var(--apollo-accent-2);
+  font-weight: 800;
+}
+
+.price-compare {
+  margin-left: 0.5rem;
+  color: var(--apollo-muted);
+  font-size: 0.9em;
+  text-decoration: line-through;
+}
+
+.section-title {
+  margin: 0 0 1.2rem;
+  color: var(--apollo-text);
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ===== PRODUCT IMAGE UTILITIES ===== */
+.product-img-wrap {
+  position: relative;
+  overflow: hidden;
+  background: #0a0d12;
+}
+
+.product-img-wrap::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.35) 100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.product-img-wrap:hover::after {
+  opacity: 1;
+}
+
+.product-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: saturate(1.1) contrast(1.05);
+  transition: transform 340ms cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 200ms ease, opacity 400ms ease;
+  opacity: 0;
+}
+
+.product-img.loaded {
+  opacity: 1;
+}
+
+.product-img-wrap:hover .product-img {
+  transform: scale(1.06);
+  filter: saturate(1.18) contrast(1.08) brightness(1.04);
+}
+
+.spacer-vert {
+  height: 2rem;
+}
+
+mat-card {
+  color: var(--apollo-text) !important;
+  border: 1px solid var(--apollo-border);
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, rgba(25, 33, 44, 0.92), rgba(15, 20, 28, 0.95)) !important;
+  box-shadow: var(--apollo-shadow) !important;
+}
+
+.mat-mdc-form-field-subscript-wrapper,
+.mat-mdc-form-field-hint,
+.mat-mdc-select-arrow,
+.mat-mdc-menu-item-text {
+  color: var(--apollo-muted) !important;
+}
+
+.mat-mdc-menu-panel {
+  border: 1px solid var(--apollo-border);
+  background: #111821 !important;
+}
+
+.mat-mdc-paginator,
+.mat-mdc-table,
+.mat-mdc-row,
+.mat-mdc-header-row {
+  color: var(--apollo-text) !important;
+  background: transparent !important;
+}
+
+.mat-mdc-header-cell,
+.mat-mdc-cell {
+  border-bottom-color: var(--apollo-border) !important;
+}
+
+/* ===== SNACKBAR (toast notifications) ===== */
+.apollo-snack-success,
+.apollo-snack-error,
+.apollo-snack-info,
+.apollo-snack-warn {
+  --mdc-snackbar-container-color: #161c26 !important;
+  --mdc-snackbar-supporting-text-color: var(--apollo-text) !important;
+  border: 1px solid var(--apollo-border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+}
+.apollo-snack-success { border-left: 3px solid var(--apollo-success) !important; }
+.apollo-snack-error { border-left: 3px solid var(--apollo-danger) !important; }
+.apollo-snack-info { border-left: 3px solid var(--apollo-accent-2) !important; }
+.apollo-snack-warn { border-left: 3px solid var(--apollo-accent) !important; }
+.apollo-snack-action .mdc-snackbar__label { font-weight: 600; }
+
+.mdc-snackbar__label { font-size: 0.88rem !important; }
+.mdc-snackbar__action { color: var(--apollo-accent-2) !important; font-weight: 700 !important; }
+
+/* ===== PROGRESS SPINNER (accent override for dark theme) ===== */
+.mat-mdc-progress-spinner circle,
+.mat-mdc-progress-spinner-indeterminate-spinner circle {
+  stroke: var(--apollo-accent-2) !important;
+}
+
+/* ===== ROUTE TRANSITION ===== */
+main.app-content > * {
+  animation: route-fade 280ms ease-out;
+}
+@keyframes route-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 760px) {
+  .app-toolbar {
+    height: auto;
+    min-height: 72px;
+    padding: 0.6rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .brand {
+    margin-right: 0.5rem;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+  }
+
+  .brand-name {
+    font-size: 1.05rem;
+  }
+
+  .brand-sub {
+    font-size: 0.58rem;
+  }
+
+  .nav-links {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .app-content {
+    width: min(100% - 1rem, 1280px);
+    padding-top: 1rem;
+  }
+}

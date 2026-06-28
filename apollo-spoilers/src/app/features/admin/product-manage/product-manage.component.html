@@ -1,0 +1,98 @@
+<h1 class="section-title">Manage Products</h1>
+<p class="welcome">View, create, edit, and deactivate products in the catalog.</p>
+
+<div class="toolbar">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Search products...</mat-label>
+    <input matInput (input)="onSearchInput($event)" [value]="searchQuery()">
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <button mat-flat-button color="primary" routerLink="/admin/products/new">
+    <mat-icon>add</mat-icon>
+    Add New Product
+  </button>
+</div>
+
+<mat-card>
+  @if (loading()) {
+    <div class="loading-state">
+      <mat-progress-spinner mode="indeterminate" diameter="40" color="accent"></mat-progress-spinner>
+      <p>Loading products...</p>
+    </div>
+  } @else if (displayedProducts().length === 0) {
+    <div class="empty">
+      @if (searchQuery()) {
+        <p>No products match "{{ searchQuery() }}".</p>
+      } @else {
+        <p>No products yet. Click "Add New Product" to create one.</p>
+      }
+    </div>
+  } @else {
+    <table mat-table [dataSource]="displayedProducts()" class="full-table">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let p">
+          <div class="product-name-cell">
+            <span class="product-name">{{ p.name }}</span>
+            @if (p.carBrand || p.carModel) {
+              <span class="fitment-tag">
+                {{ p.carBrand }}
+                @if (p.carBrand && p.carModel) { <span> </span> }
+                {{ p.carModel }}
+              </span>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef>Price</th>
+        <td mat-cell *matCellDef="let p">
+          <span class="price">₹{{ p.price.toFixed(2) }}</span>
+          @if (p.compareAtPrice) {
+            <span class="price-compare">₹{{ p.compareAtPrice.toFixed(2) }}</span>
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="stock">
+        <th mat-header-cell *matHeaderCellDef>Stock</th>
+        <td mat-cell *matCellDef="let p">
+          <span [class.low-stock]="p.stockQuantity <= 5">{{ p.stockQuantity }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let p">
+          <mat-chip-set>
+            @if (p.isFeatured) {
+              <mat-chip color="accent" highlightColor="accent">Featured</mat-chip>
+            }
+            <mat-chip [color]="p.stockQuantity > 0 ? 'primary' : 'warn'">
+              {{ p.stockQuantity > 0 ? 'In Stock' : 'Out of Stock' }}
+            </mat-chip>
+          </mat-chip-set>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let p">
+          <div class="action-btns">
+            <button mat-icon-button type="button" [routerLink]="['/admin/products', p.id, 'edit']" matTooltip="Edit" color="primary">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button type="button" color="warn" (click)="deleteProduct(p.id)" matTooltip="Deactivate">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns;"></tr>
+    </table>
+  }
+</mat-card>

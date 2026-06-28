@@ -1,0 +1,295 @@
+<article>
+  <!-- ===== HERO ===== -->
+  <section class="contact-hero" aria-label="Contact us">
+    <div class="hero-bar"></div>
+    <div class="hero-content">
+      <div class="eyebrow">Get in Touch</div>
+      <h1>We're Here to Help</h1>
+      <p class="hero-sub">
+        Whether you need help choosing the right spoiler, have a question about fitment,
+        or want a custom aero solution — our team of automotive specialists is ready.
+      </p>
+      <div class="hero-chips">
+        <span class="hero-chip"><mat-icon>verified</mat-icon> 1-Year warranty</span>
+        <span class="hero-chip"><mat-icon>local_shipping</mat-icon> Free Insured Shipping</span>
+        <span class="hero-chip"><mat-icon>support_agent</mat-icon> Expert Guidance</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== QUICK CONTACT CARDS ===== -->
+  <section class="quick-contact" aria-label="Quick contact options">
+    <div class="quick-grid">
+      <a href="mailto:ApolloSpoilers@gmail.com" class="quick-card">
+        <div class="quick-icon">
+          <mat-icon>mail</mat-icon>
+        </div>
+        <h3>Email Us</h3>
+        <p class="quick-value">ApolloSpoilers@gmail.com</p>
+        <p class="quick-hint">We reply within 2 hours</p>
+      </a>
+
+      <a href="tel:+91-8076642594" class="quick-card">
+        <div class="quick-icon">
+          <mat-icon>phone</mat-icon>
+        </div>
+        <h3>Call Support</h3>
+        <p class="quick-value">+91-8076642594</p>
+        <p class="quick-hint">Mon – Sat, 9 AM – 7 PM IST</p>
+      </a>
+
+      <a href="tel:+91-9717714997" class="quick-card">
+        <div class="quick-icon">
+          <mat-icon>phone_in_talk</mat-icon>
+        </div>
+        <h3>Sales Team</h3>
+        <p class="quick-value">+91-9717714997</p>
+        <p class="quick-hint">Bulk & custom orders</p>
+      </a>
+
+      <div class="quick-card">
+        <div class="quick-icon">
+          <mat-icon>location_on</mat-icon>
+        </div>
+        <h3>Based in India</h3>
+        <p class="quick-value">Nationwide Shipping</p>
+        <p class="quick-hint">Delivering across all states</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ACHIEVEMENTS ===== -->
+  <section class="achievements" aria-label="Our achievements">
+    <div class="section-header">
+      <div class="eyebrow">Why Customers Trust Us</div>
+      <h2 class="section-title">Proven Quality, Real Results</h2>
+      <p class="section-sub">Numbers that speak for themselves — built on thousands of happy customers and years of engineering excellence.</p>
+    </div>
+    <div class="achieve-grid">
+      @for (a of achievements; track a.label) {
+        <div class="achieve-card">
+          <mat-icon class="achieve-icon">{{ a.icon }}</mat-icon>
+          <span class="achieve-value">{{ a.value }}</span>
+          <span class="achieve-label">{{ a.label }}</span>
+          <p class="achieve-desc">{{ a.desc }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ===== TRUST BADGES ===== -->
+  <section class="trust-section" aria-label="Our commitments">
+    <div class="section-header">
+      <div class="eyebrow">Our Promise</div>
+      <h2 class="section-title">Built on Trust</h2>
+      <p class="section-sub">Every purchase comes with the confidence of knowing you're backed by a team that stands behind every product.</p>
+    </div>
+    <div class="trust-grid">
+      @for (t of trustPoints; track t.title) {
+        <div class="trust-card">
+          <mat-icon class="trust-icon">{{ t.icon }}</mat-icon>
+          <h3>{{ t.title }}</h3>
+          <p>{{ t.desc }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ===== CONTACT FORM + INFO ===== -->
+  <section class="form-section" aria-label="Send us a message">
+    <div class="form-grid">
+      <div class="form-col">
+        <div class="section-header">
+          <div class="eyebrow">Send a Message</div>
+          <h2 class="section-title">Let's Talk</h2>
+          <p class="section-sub">Fill out the form and our team will get back to you within 2 business hours.</p>
+        </div>
+
+        @if (submitted()) {
+          <div class="success-card">
+            <mat-icon class="success-icon">check_circle</mat-icon>
+            <h3>Message Sent!</h3>
+            <p>Thank you for reaching out. Our team will respond within 2 hours during business hours.</p>
+            <button mat-flat-button color="primary" (click)="submitted.set(false); form.reset();">
+              Send Another Message
+            </button>
+          </div>
+        } @else {
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="contact-form" novalidate>
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="form-half">
+                <mat-label>Full Name *</mat-label>
+                <input matInput formControlName="name" placeholder="Your name" [attr.aria-required]="true">
+                @if (getErrorMessage('name')) {
+                  <mat-error>{{ getErrorMessage('name') }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-half">
+                <mat-label>Email Address *</mat-label>
+                <input matInput type="email" formControlName="email" placeholder="you@email.com" [attr.aria-required]="true">
+                @if (getErrorMessage('email')) {
+                  <mat-error>{{ getErrorMessage('email') }}</mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="form-half">
+                <mat-label>Phone Number *</mat-label>
+                <input matInput type="tel" formControlName="phoneNumber" placeholder="+91 98765 43210" [attr.aria-required]="true">
+                @if (getErrorMessage('phoneNumber')) {
+                  <mat-error>{{ getErrorMessage('phoneNumber') }}</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-half">
+                <mat-label>Subject *</mat-label>
+                <mat-select formControlName="subject" [attr.aria-required]="true">
+                  <mat-option value="general">General Inquiry</mat-option>
+                  <mat-option value="fitment">Fitment Help</mat-option>
+                  <mat-option value="custom">Custom Order</mat-option>
+                  <mat-option value="warranty">Warranty Claim</mat-option>
+                  <mat-option value="return">Return / Exchange</mat-option>
+                  <mat-option value="wholesale">Wholesale / Bulk</mat-option>
+                  <mat-option value="feedback">Feedback</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="form-third">
+                <mat-label>Car Brand (Optional)</mat-label>
+                <input matInput formControlName="carBrand" placeholder="e.g. Toyota">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="form-third">
+                <mat-label>Car Model (Optional)</mat-label>
+                <input matInput formControlName="carModel" placeholder="e.g. Supra">
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Message *</mat-label>
+              <textarea matInput formControlName="message" rows="5" placeholder="Tell us how we can help..." [attr.aria-required]="true"></textarea>
+              @if (getErrorMessage('message')) {
+                <mat-error>{{ getErrorMessage('message') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <button mat-flat-button color="primary" class="submit-btn"
+                    type="submit" [disabled]="sending()">
+              @if (sending()) {
+                <span class="btn-label"><span class="spin-icon">⟳</span> Sending...</span>
+              } @else {
+                <span class="btn-label">Send Message</span>
+              }
+            </button>
+          </form>
+        }
+      </div>
+
+      <aside class="info-col">
+        <div class="info-card">
+          <h3>Contact Details</h3>
+          <ul class="info-list">
+            <li>
+              <mat-icon>mail</mat-icon>
+              <div>
+                <span class="info-label">Email</span>
+                <a href="mailto:ApolloSpoilers@gmail.com">ApolloSpoilers@gmail.com</a>
+              </div>
+            </li>
+            <li>
+              <mat-icon>support_agent</mat-icon>
+              <div>
+                <span class="info-label">Support</span>
+                <a href="tel:+918076642594">+91 8076642594</a>
+              </div>
+            </li>
+            <li>
+              <mat-icon>handshake</mat-icon>
+              <div>
+                <span class="info-label">Sales</span>
+                <a href="tel:+919717714997">+91 9717714997</a>
+              </div>
+            </li>
+            <li>
+              <mat-icon>schedule</mat-icon>
+              <div>
+                <span class="info-label">Hours</span>
+                <span>Mon – Sat, 9 AM – 7 PM IST</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <h3>Response Times</h3>
+          <div class="response-times">
+            <div class="response-row">
+              <span class="response-channel">Email</span>
+              <span class="response-badge fast">Under 2 hours</span>
+            </div>
+            <div class="response-row">
+              <span class="response-channel">Phone</span>
+              <span class="response-badge fast">Instant</span>
+            </div>
+            <div class="response-row">
+              <span class="response-channel">Custom Orders</span>
+              <span class="response-badge normal">Within 24 hours</span>
+            </div>
+            <div class="response-row">
+              <span class="response-channel">Returns</span>
+              <span class="response-badge normal">Same day</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card cta-card">
+          <mat-icon class="cta-icon">bolt</mat-icon>
+          <h3>Need Instant Help?</h3>
+          <p>Chat with AasRa AI, our intelligent styling assistant, available 24/7 on every page.</p>
+          <p class="cta-hint">Look for the <strong class="accent-text">Ask AasRa</strong> button at the bottom-right corner.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===== FAQ ===== -->
+  <section class="faq-section" aria-label="Frequently asked questions">
+    <div class="section-header">
+      <div class="eyebrow">Common Questions</div>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <p class="section-sub">Quick answers to the questions we hear most.</p>
+    </div>
+    <div class="faq-list" role="list">
+      @for (f of faqs; track f.q; let i = $index) {
+        <div class="faq-item" [class.open]="openFaq() === i" role="listitem">
+          <button class="faq-question" (click)="toggleFaq(i)" [aria-expanded]="openFaq() === i">
+            <span>{{ f.q }}</span>
+            <mat-icon class="faq-chevron">expand_more</mat-icon>
+          </button>
+          <div class="faq-answer" [class.visible]="openFaq() === i">
+            <p>{{ f.a }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ===== CTA BANNER ===== -->
+  <section class="cta-banner">
+    <div class="cta-content">
+      <h2>Ready to Upgrade Your Ride?</h2>
+      <p>Browse our full catalog of premium spoilers, wings, and aero kits — all backed by our 1-Year warranty and expert support.</p>
+      <div class="cta-buttons">
+        <a mat-flat-button color="primary" class="hero-cta" routerLink="/">
+          <mat-icon>storefront</mat-icon> Browse Catalog
+        </a>
+        <a mat-stroked-button class="hero-cta-outline" routerLink="/about">
+          <mat-icon>info</mat-icon> Learn About Us
+        </a>
+      </div>
+    </div>
+  </section>
+</article>

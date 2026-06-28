@@ -1,0 +1,205 @@
+<div class="form-wrap">
+  <mat-card class="product-card">
+    <div class="card-header">
+      <div>
+        <div class="eyebrow">Admin</div>
+        <h1>{{ isEdit() ? 'Edit Product' : 'Add New Product' }}</h1>
+        <p class="subtitle">{{ isEdit() ? 'Update product details, pricing, and images.' : 'Fill in the product details to add it to the catalog.' }}</p>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state">
+        <mat-progress-spinner mode="indeterminate" diameter="40" color="accent"></mat-progress-spinner>
+        <p>Loading product data...</p>
+      </div>
+    } @else {
+      @if (error()) { <div class="error">{{ error() }}</div> }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <!-- ====== Basic Info ====== -->
+        <h3 class="section-heading">Basic Information</h3>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Product Name *</mat-label>
+          <input matInput formControlName="name" placeholder="e.g. GT Wing Spoiler - Carbon Fiber">
+          @if (form.get('name')?.invalid && form.get('name')?.touched) {
+            <mat-error>Product name is required (max 200 characters).</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Description *</mat-label>
+          <textarea matInput formControlName="description" rows="4" placeholder="Describe the product features, fitment details, materials..."></textarea>
+          @if (form.get('description')?.invalid && form.get('description')?.touched) {
+            <mat-error>Description is required (min 10 characters).</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="row">
+          <mat-form-field appearance="outline">
+            <mat-label>Price (INR) *</mat-label>
+            <input matInput type="number" formControlName="price" placeholder="0.00">
+            @if (form.get('price')?.invalid && form.get('price')?.touched) {
+              <mat-error>Valid price is required.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Compare-at Price (optional)</mat-label>
+            <input matInput type="number" formControlName="compareAtPrice" placeholder="0.00">
+            <mat-hint>Shown as strikethrough to highlight discount.</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="row">
+          <mat-form-field appearance="outline">
+            <mat-label>Material</mat-label>
+            <input matInput formControlName="material" placeholder="e.g. Carbon Fiber, ABS Plastic">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Color</mat-label>
+            <input matInput formControlName="color" placeholder="e.g. Matte Black, Gloss Red">
+          </mat-form-field>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- ====== Vehicle Fitment ====== -->
+        <h3 class="section-heading">Vehicle Fitment</h3>
+        <p class="hint">Leave blank for universal-fit products.</p>
+
+        <div class="row">
+          <mat-form-field appearance="outline">
+            <mat-label>Car Brand</mat-label>
+            <mat-select formControlName="carBrand">
+              <mat-option value="">Universal / Any</mat-option>
+              @for (brand of carBrands(); track brand) {
+                <mat-option [value]="brand">{{ brand }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Car Model</mat-label>
+            <mat-select formControlName="carModel">
+              <mat-option value="">Any Model</mat-option>
+              @for (model of carModels(); track model) {
+                <mat-option [value]="model">{{ model }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="row">
+          <mat-form-field appearance="outline">
+            <mat-label>Fit Year From</mat-label>
+            <input matInput type="number" formControlName="fitYearFrom" placeholder="e.g. 2020">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Fit Year To</mat-label>
+            <input matInput type="number" formControlName="fitYearTo" placeholder="e.g. 2024">
+          </mat-form-field>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- ====== Category & Status ====== -->
+        <h3 class="section-heading">Category & Status</h3>
+
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Category *</mat-label>
+          <mat-select formControlName="categoryId">
+            @for (cat of categories(); track cat.id) {
+              <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
+            }
+          </mat-select>
+          @if (form.get('categoryId')?.invalid && form.get('categoryId')?.touched) {
+            <mat-error>Category is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="row checkboxes">
+          <mat-checkbox formControlName="isActive" color="primary">Active (visible to customers)</mat-checkbox>
+          <mat-checkbox formControlName="isFeatured" color="primary">Featured (shown on homepage)</mat-checkbox>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- ====== Inventory ====== -->
+        <h3 class="section-heading">Inventory</h3>
+
+        <div class="row">
+          <mat-form-field appearance="outline">
+            <mat-label>Initial Stock *</mat-label>
+            <input matInput type="number" formControlName="initialStock" placeholder="0">
+            @if (form.get('initialStock')?.invalid && form.get('initialStock')?.touched) {
+              <mat-error>Stock quantity is required.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Low Stock Threshold</mat-label>
+            <input matInput type="number" formControlName="lowStockThreshold" placeholder="5">
+            <mat-hint>Alert when stock falls below this.</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- ====== Image Upload ====== -->
+        <h3 class="section-heading">Product Images</h3>
+
+        <div
+          class="drop-zone"
+          [class.drag-active]="dragCounter > 0"
+          (dragenter)="onDragEnter($event)"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+        >
+          <mat-icon class="drop-icon">cloud_upload</mat-icon>
+          <p class="drop-text">Drag & drop images here, or</p>
+          <label class="upload-btn" mat-stroked-button color="primary">
+            Browse Files
+            <input type="file" accept="image/*" multiple hidden (change)="onFileSelected($event)">
+          </label>
+          <p class="drop-hint">JPG, PNG, GIF, WebP — max 5 MB each</p>
+        </div>
+
+        @if (images().length > 0) {
+          <div class="image-grid">
+            @for (img of images(); track $index; let i = $index) {
+              <div class="image-card" [class.primary]="img.isPrimary">
+                <img [src]="img.imageUrl" alt="Product image" class="thumb">
+                <div class="image-actions">
+                  <button mat-icon-button type="button" (click)="setPrimary(i)" matTooltip="Set as primary" [disabled]="img.isPrimary">
+                    <mat-icon>{{ img.isPrimary ? 'star' : 'star_outline' }}</mat-icon>
+                  </button>
+                  <button mat-icon-button type="button" color="warn" (click)="removeImage(i)" matTooltip="Remove image">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+                @if (img.isPrimary) {
+                  <span class="primary-badge">Primary</span>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <mat-divider></mat-divider>
+
+        <!-- ====== Actions ====== -->
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit" class="save-btn" [disabled]="form.invalid || saving()">
+            @if (saving()) {
+              <mat-progress-spinner mode="indeterminate" diameter="20"></mat-progress-spinner>
+              <span>{{ isEdit() ? 'Saving...' : 'Creating...' }}</span>
+            } @else {
+              <span>{{ isEdit() ? 'Update Product' : 'Create Product' }}</span>
+            }
+          </button>
+          <button mat-stroked-button type="button" (click)="cancel()" [disabled]="saving()">Cancel</button>
+        </div>
+      </form>
+    }
+  </mat-card>
+</div>

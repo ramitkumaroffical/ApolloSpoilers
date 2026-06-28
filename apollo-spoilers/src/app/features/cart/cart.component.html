@@ -1,0 +1,63 @@
+<div class="cart-head">
+  <span class="cart-kicker"><mat-icon>shopping_cart</mat-icon> Your Selection</span>
+  <h1 class="section-title">Your Cart</h1>
+  @if (!loading() && cart() && cart()!.items.length > 0) {
+    <p class="cart-sub">{{ cart()!.totalItems }} item{{ cart()!.totalItems === 1 ? '' : 's' }} ready for the road.</p>
+  }
+</div>
+
+@if (loading()) {
+  <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate" diameter="44" color="accent"></mat-progress-spinner>
+    <p>Loading your cart...</p>
+  </div>
+} @else if (!cart() || cart()!.items.length === 0) {
+  <div class="empty">
+    <mat-icon>remove_shopping_cart</mat-icon>
+    <p>Your cart is empty.</p>
+    <button mat-flat-button color="primary" routerLink="/">Browse Products</button>
+  </div>
+} @else {
+  <div class="cart-layout">
+    <div class="items">
+      @for (item of cart()!.items; track item.id) {
+        <mat-card class="cart-item">
+              <div class="thumb-wrap">
+                <img [src]="(environment.imageUrl + item.primaryImageUrl) || '/assets/placeholder.svg'"
+                     [alt]="item.productName" class="thumb"
+                     (load)="$event.target.classList.add('loaded')"
+                     (error)="$event.target.src = '/assets/placeholder.svg'">
+              </div>
+          <div class="details">
+            <a [routerLink]="['/products', item.productSlug]" class="name">{{ item.productName }}</a>
+            <div class="unit"><mat-icon>sell</mat-icon> ₹{{ item.unitPrice.toFixed(2) }} each</div>
+            @if (item.availableStock === 0) { <div class="warn"><mat-icon>warning</mat-icon> Out of stock</div> }
+          </div>
+          <div class="qty">
+            <button mat-icon-button (click)="update(item.id, item.quantity - 1)" [disabled]="item.quantity <= 1">
+              <mat-icon>remove</mat-icon>
+            </button>
+            <span>{{ item.quantity }}</span>
+            <button mat-icon-button (click)="update(item.id, item.quantity + 1)" [disabled]="item.quantity >= item.availableStock">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+          <div class="line-total">₹{{ item.lineTotal.toFixed(2) }}</div>
+          <button mat-icon-button color="warn" (click)="remove(item.id)"><mat-icon>delete</mat-icon></button>
+        </mat-card>
+      }
+    </div>
+
+    <mat-card class="summary">
+      <h3>Order Summary</h3>
+      <div class="row"><span>Subtotal ({{ cart()!.totalItems }} items)</span><span>₹{{ cart()!.subtotal.toFixed(2) }}</span></div>
+      <div class="row"><span>Shipping</span><span class="free">Free</span></div>
+      <hr>
+      <div class="row total"><span>Total</span><span>₹{{ cart()!.subtotal.toFixed(2) }}</span></div>
+      <button mat-flat-button color="primary" class="full checkout-btn" (click)="checkout()">
+        <mat-icon>lock</mat-icon> Proceed to Checkout
+      </button>
+      <button mat-stroked-button class="full" (click)="clear()">Clear Cart</button>
+    </mat-card>
+  </div>
+}

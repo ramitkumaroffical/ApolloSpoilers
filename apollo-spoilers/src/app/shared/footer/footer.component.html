@@ -1,0 +1,78 @@
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-inner">
+    <!-- Brand column -->
+    <div class="col col-brand">
+      <a routerLink="/" class="brand" aria-label="Apollo Spoilers Home">
+        <span class="brand-mark" aria-hidden="true"><span class="gauge-mark"></span></span>
+        <span class="brand-copy">
+          <span class="brand-name">APOLLO</span>
+          <span class="brand-sub">SPOILERS</span>
+        </span>
+      </a>
+      <p class="brand-tagline">India's #1 destination for premium GT wings, spoilers & carbon-fibre aero kits — race-grade performance with OEM-perfect fitment. Free shipping + 1-Year warranty.</p>
+      <div class="social" aria-label="Social media links">
+        <a href="mailto:ApolloSpoilers@gmail.com" aria-label="Email us" class="social-link">
+          <mat-icon>email</mat-icon>
+        </a>
+        <a href="https://instagram.com/apollospoilers" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="social-link">
+          <mat-icon>camera_alt</mat-icon>
+        </a>
+        <a href="https://youtube.com/@apollospoilers" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="social-link">
+          <mat-icon>play_circle</mat-icon>
+        </a>
+        <a href="https://facebook.com/apollospoilers" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="social-link">
+          <mat-icon>public</mat-icon>
+        </a>
+      </div>
+    </div>
+
+    <!-- Quick links column -->
+    <div class="col">
+      <h4 class="col-title">Shop</h4>
+      <ul class="link-list">
+        <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">All Products</a></li>
+        <li><a routerLink="/cart">Cart</a></li>
+        <li><a routerLink="/wishlist">Wishlist</a></li>
+        <li><a routerLink="/orders">Order History</a></li>
+      </ul>
+    </div>
+
+    <!-- Company column -->
+    <div class="col">
+      <h4 class="col-title">Company</h4>
+      <ul class="link-list">
+        <li><a routerLink="/about" routerLinkActive="active">About Us</a></li>
+        <li><a routerLink="/contact" routerLinkActive="active">Contact Us</a></li>
+        <li><a routerLink="/login">Sign In</a></li>
+        <li><a routerLink="/register">Create Account</a></li>
+      </ul>
+    </div>
+
+    <!-- Contact & Support column -->
+    <div class="col">
+      <h4 class="col-title">Support</h4>
+      <ul class="link-list">
+        <li>
+          <a href="mailto:ApolloSpoilers@gmail.com">ApolloSpoilers@gmail.com</a>
+        </li>
+        <li>
+          <a href="tel:+918076642594">Support: +91-8076642594</a>
+        </li>
+        <li>
+          <a href="tel:+919717714997">Sales: +91-9717714997</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- AI badge + copyright -->
+  <div class="footer-bottom">
+    <div class="footer-bottom-inner">
+      <span class="copyright">© {{ year }} Apollo Spoilers. All rights reserved.</span>
+      <span class="ai-badge">
+        <span class="spark-mark" aria-hidden="true"></span>
+        Powered by AasRa AI
+      </span>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,25 @@
+{
+  "name": "Apollo Spoilers — Premium Car Spoilers & Aero Styling",
+  "short_name": "Apollo Spoilers",
+  "description": "India's #1 source for premium car spoilers, GT wings, splitters & exterior aero styling. Free shipping, 1-Year warranty, 150+ car models.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080a0d",
+  "theme_color": "#ff3d1f",
+  "orientation": "portrait-primary",
+  "categories": ["shopping", "automotive"],
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "assets/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.ico",
+      "sizes": "32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

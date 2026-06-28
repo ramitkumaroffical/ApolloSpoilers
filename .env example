@@ -1,0 +1,59 @@
+# =============================================================
+# Apollo Spoilers — environment template
+# Copy to ".env" (in repo root for docker-compose) and fill in.
+# All values map to appsettings via environment-variable overrides.
+# =============================================================
+
+# ---------- SQL Server ----------
+SA_PASSWORD=your_strong_password_here
+SQL_IMAGE=mcr.microsoft.com/mssql/server:2022-latest
+DB_NAME=ApolloSpoilers
+DB_USER=sa
+DB_PASSWORD=your_strong_password_here
+DB_HOST=sqlserver
+DB_PORT=1433
+
+# ---------- API ----------
+ASPNETCORE_ENVIRONMENT=Development
+ASPNETCORE_URLS=http://+:8080
+
+ConnectionStrings__DefaultConnection=Server=tcp:your_server.database.windows.net,1433;Initial Catalog=ApolloSpoilers;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";
+
+# ---------- JWT ----------
+Jwt__Issuer=AI.DocumentAssistant
+Jwt__Audience=AI.Users
+Jwt__AccessTokenExpirationMinutes=15
+Jwt__RefreshTokenExpirationDays=7
+Jwt__Secret=your_jwt_secret_here
+
+# ---------- AI / Groq ----------
+Ai__Llm__BaseUrl=https://api.groq.com/openai/v1
+Ai__Llm__ApiKey=your_groq_api_key_here
+Ai__Llm__Model=llama-3.3-70b-versatile
+
+Ai__Embedding__BaseUrl=http://ollama:11434/v1
+Ai__Embedding__ApiKey=ollama-local
+Ai__Embedding__Model=nomic-embed-text
+
+Ai__Qdrant__Endpoint=http://qdrant:6333
+Ai__Qdrant__Collection=apollo_products
+Ai__Chat__TopK=5
+Ai__Chat__HistoryMessages=10
+Ai__Chat__TimeoutSeconds=300
+
+# ---------- Email / SMTP ----------
+Email__Host=smtp.example.com
+Email__Port=587
+Email__Username=
+Email__Password=
+Email__From=no-reply@apollospoilers.com
+Email__FromName=Apollo Spoilers
+Email__EnableSsl=true
+App__FrontendUrl=http://localhost:4200
+
+# ---------- CORS ----------
+Cors__Origins__0=http://localhost:4200
+
+# ---------- Seeded admin ----------
+Seed__AdminEmail=admin@apollospoilers.com
+Seed__AdminPassword=your_admin_password_here

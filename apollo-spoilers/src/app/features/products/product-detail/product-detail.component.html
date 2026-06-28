@@ -1,0 +1,95 @@
+@if (loading()) {
+  <div class="loader">
+    <mat-progress-spinner mode="indeterminate" diameter="48" color="accent"></mat-progress-spinner>
+    <p>Loading product...</p>
+  </div>
+} @else if (product(); as p) {
+  <button mat-button routerLink="/" class="back-btn"><mat-icon>arrow_back</mat-icon> Back to shop</button>
+
+  <div class="detail-grid">
+    <div class="images">
+      <div class="main-img-wrap">
+        @if (discountPercent() > 0) {
+          <span class="discount-badge-detail">-{{ discountPercent() }}%</span>
+        }
+        <img [src]="environment.imageUrl + (selectedImage() || '')" [alt]="p.name" class="main-img"
+             (load)="$event.target.classList.add('loaded')"
+             (error)="$event.target.src = '/assets/placeholder.svg'">
+      </div>
+      @if (p.images.length > 1) {
+        <div class="thumbs">
+          @for (img of p.images; track img.id) {
+            <div class="thumb-wrap" [class.active]="selectedImage() === img.imageUrl"
+                 (click)="selectedImage.set(img.imageUrl)">
+              <img [src]="environment.imageUrl + img.imageUrl" [alt]="img.altText || p.name" class="thumb"
+                   (load)="$event.target.classList.add('loaded')"
+                   (error)="$event.target.src = '/assets/placeholder.svg'">
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="info">
+      <div class="cat">{{ p.categoryName }}</div>
+      <h1>{{ p.name }}</h1>
+
+      <div class="price-row">
+        <span class="price big">₹{{ p.price.toFixed(2) }}</span>
+        @if (p.compareAtPrice && p.compareAtPrice > p.price) {
+          <span class="price-compare big">₹{{ p.compareAtPrice.toFixed(2) }}</span>
+          <span class="savings-tag">Save ₹{{ savings().toFixed(2) }}</span>
+        }
+      </div>
+
+      @if (p.averageRating > 0) {
+        <div class="rating">★ {{ p.averageRating.toFixed(1) }} ({{ p.reviewCount }} reviews)</div>
+      }
+
+      <mat-chip-set>
+        @if (p.carBrand) { <mat-chip>{{ p.carBrand }} {{ p.carModel }}</mat-chip> }
+        @if (p.material) { <mat-chip>{{ p.material }}</mat-chip> }
+        @if (p.color) { <mat-chip>{{ p.color }}</mat-chip> }
+        @if (p.fitYearFrom) { <mat-chip>{{ p.fitYearFrom }}{{ p.fitYearTo ? '-' + p.fitYearTo : '+' }}</mat-chip> }
+        @if (p.stockQuantity > 0) {
+          <mat-chip color="primary">In Stock ({{ p.stockQuantity }})</mat-chip>
+        } @else {
+          <mat-chip color="warn">Out of Stock</mat-chip>
+        }
+      </mat-chip-set>
+
+      <p class="desc">{{ p.description }}</p>
+
+      <div class="actions">
+        <button mat-flat-button color="primary" (click)="addToCart()"
+                [disabled]="p.stockQuantity === 0 || addingToCart()">
+          @if (addingToCart()) {
+            <span class="btn-label">Adding...</span>
+          } @else {
+            <span class="btn-label">Add to Cart</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <section class="reviews-section">
+    <h2>Customer Reviews</h2>
+    @if (reviews().length === 0) {
+      <p class="empty">No reviews yet. Be the first to review!</p>
+    } @else {
+      @for (rev of reviews(); track rev.id) {
+        <mat-card class="review-card">
+          <div class="review-head">
+            <strong>{{ rev.authorName }}</strong>
+            <span class="stars">{{ '★'.repeat(rev.rating) }}{{ '☆'.repeat(5 - rev.rating) }}</span>
+            <span class="date">{{ rev.createdAt | date:'mediumDate' }}</span>
+          </div>
+          <p>{{ rev.comment }}</p>
+        </mat-card>
+      }
+    }
+  </section>
+} @else {
+  <div class="empty">Product not found.</div>
+}

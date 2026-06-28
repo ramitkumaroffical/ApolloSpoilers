@@ -1,0 +1,301 @@
+<div class="checkout-page">
+  <h1 class="section-title">Checkout</h1>
+
+  @if (success()) {
+  <div class="success-overlay">
+    <div class="success-box">
+      <mat-icon class="check-icon">check_circle</mat-icon>
+      <h2>Order Placed!</h2>
+      <p>Thank you for shopping with Apollo Spoilers. Redirecting to your orders...</p>
+    </div>
+  </div>
+  } @else {
+  <!-- ─── Step Indicator ─── -->
+  <div class="steps-bar">
+    <div class="step-item" [class.active]="step() >= 1" [class.done]="step() > 1">
+      <div class="step-num">1</div>
+      <span class="step-label">Shipping</span>
+    </div>
+    <div class="step-line" [class.filled]="step() > 1"></div>
+    <div class="step-item" [class.active]="step() >= 2" [class.done]="step() > 2">
+      <div class="step-num">2</div>
+      <span class="step-label">Payment</span>
+    </div>
+    <div class="step-line" [class.filled]="step() > 2"></div>
+    <div class="step-item" [class.active]="step() >= 3">
+      <div class="step-num">3</div>
+      <span class="step-label">Review</span>
+    </div>
+  </div>
+
+  @if (error()) { <div class="error">{{ error() }}</div> }
+
+  <div class="layout">
+
+    <!-- ─── Main Content ─── -->
+    <div class="main">
+
+      <!-- STEP 1: Shipping Address -->
+      @if (step() === 1) {
+      <mat-card class="card">
+        <div class="card-header">
+          <mat-icon>local_shipping</mat-icon>
+          <h3>Shipping Address</h3>
+        </div>
+        <form [formGroup]="form" (ngSubmit)="nextFromShipping()" class="checkout-form">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Full Name</mat-label>
+            <input matInput formControlName="shippingFullName">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Address Line</mat-label>
+            <input matInput formControlName="shippingAddressLine">
+          </mat-form-field>
+          <div class="row">
+            <mat-form-field appearance="outline">
+              <mat-label>City</mat-label>
+              <input matInput formControlName="shippingCity">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>State / Province</mat-label>
+              <input matInput formControlName="shippingState">
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <mat-form-field appearance="outline">
+              <mat-label>Postal Code</mat-label>
+              <input matInput formControlName="shippingPostalCode">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Country</mat-label>
+              <input matInput formControlName="shippingCountry">
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Phone (optional)</mat-label>
+            <input matInput formControlName="shippingPhone">
+          </mat-form-field>
+          <button mat-flat-button color="primary" class="full btn-next" type="submit" [disabled]="!canProceedShipping">
+            Continue to Payment
+          </button>
+        </form>
+      </mat-card>
+      }
+
+      <!-- STEP 2: Payment Method -->
+      @if (step() === 2) {
+      <mat-card class="card">
+        <div class="card-header">
+          <mat-icon>payment</mat-icon>
+          <h3>Payment Method</h3>
+        </div>
+
+        <form [formGroup]="form">
+
+          <!-- Method Selector -->
+          <div class="method-grid">
+            @for (m of paymentMethods; track m) {
+            <div class="method-option" [class.selected]="selectedMethod() === m" (click)="selectMethod(m)">
+              <div class="method-icon">
+                <mat-icon>{{ getIcon(m) }}</mat-icon>
+              </div>
+              <div class="method-text">
+                <strong>{{ getLabel(m) }}</strong>
+                <small>{{ getDesc(m) }}</small>
+              </div>
+              <mat-icon class="method-check">{{ selectedMethod() === m ? 'check_circle' : 'radio_button_unchecked'
+                }}</mat-icon>
+            </div>
+            }
+          </div>
+
+          <!-- Method-specific forms -->
+          @if (selectedMethod() === 'Card') {
+          <div class="payment-form-section">
+            <h4><mat-icon>credit_card</mat-icon> Card Details</h4>            
+            <form [formGroup]="cardForm">
+              <mat-form-field appearance="outline" class="full">
+                <mat-label>Card Number</mat-label>
+                <input matInput [value]="formattedCardNum()" (input)="onCardNumberInput($event)">
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Name on Card</mat-label>
+                <input matInput formControlName="cardName">
+              </mat-form-field>
+              <div class="row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Expiry (MM/YY)</mat-label>
+                  <input matInput [value]="formattedExpiry()" (input)="onExpiryInput($event)">
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>CVV</mat-label>
+                  <input matInput type="password" formControlName="cvv" maxlength="4">
+                </mat-form-field>
+              </div>
+            </form>
+          </div>
+          }
+
+          @if (selectedMethod() === 'UPI') {
+          <div class="payment-form-section">
+            <h4><mat-icon>account_balance</mat-icon> UPI Payment</h4>
+            <p class="upi-hint">Enter your UPI ID or scan with any UPI app</p>
+            <form [formGroup]="upiForm">
+              <mat-form-field appearance="outline" class="full">
+                <mat-label>UPI ID</mat-label>
+                <input matInput formControlName="upiId" placeholder="yourname@upi">
+              </mat-form-field>
+            </form>
+          </div>
+          }
+
+          @if (selectedMethod() === 'Paytm') {
+          <div class="payment-form-section">
+            <h4><mat-icon>phone_android</mat-icon> Paytm Wallet</h4>
+            <p class="upi-hint">Enter your Paytm-registered mobile number</p>            
+            <form [formGroup]="paytmForm">
+              <mat-form-field appearance="outline" class="full">
+                <mat-label>Mobile Number</mat-label>
+                <input matInput formControlName="paytmNumber" placeholder="9876543210" maxlength="10">
+              </mat-form-field>
+            </form>
+          </div>
+          }
+
+          @if (selectedMethod() === 'COD') {
+          <div class="payment-form-section cod-section">
+            <mat-icon class="cod-icon">local_atm</mat-icon>
+            <div>
+              <h4>Cash on Delivery</h4>
+              <p>Pay in cash when your order is delivered to your doorstep. Please keep the exact amount ready for a
+                smooth delivery.</p>
+            </div>
+          </div>
+          }
+        </form>
+        <!-- Processing overlay -->
+        @if (processingPayment()) {
+        <div class="processing-overlay">
+          <mat-progress-spinner mode="indeterminate" diameter="48" color="accent"></mat-progress-spinner>
+          <p>Processing payment<span class="dots">...</span></p>
+        </div>
+        }
+
+        <div class="step-actions">
+          <button mat-stroked-button (click)="backToShipping()">
+            Back
+          </button>
+          <button mat-flat-button color="primary" class="btn-next"
+            [disabled]="!canProceedPayment || processingPayment()" (click)="processPayment()">
+            {{ selectedMethod() === 'COD' ? 'Confirm COD' : 'Pay Now' }}
+          </button>
+        </div>
+      </mat-card>
+      }
+
+      <!-- STEP 3: Review & Confirm -->
+      @if (step() === 3) {
+      <mat-card class="card">
+        <div class="card-header">
+          <mat-icon>fact_check</mat-icon>
+          <h3>Review Your Order</h3>
+        </div>
+
+        <!-- Shipping Summary -->
+        <div class="review-block">
+          <div class="review-heading">
+            <mat-icon>location_on</mat-icon>
+            <h4>Shipping To</h4>
+          </div>
+          <p>{{ form.value.shippingFullName }}</p>
+          <p>{{ form.value.shippingAddressLine }}</p>
+          <p>{{ form.value.shippingCity }}, {{ form.value.shippingState }} {{ form.value.shippingPostalCode }}</p>
+          <p>{{ form.value.shippingCountry }}</p>
+          @if (form.value.shippingPhone) { <p>Phone: {{ form.value.shippingPhone }}</p> }
+          <button mat-button color="accent" class="edit-btn" (click)="backToShipping()">Edit</button>
+        </div>
+
+        <!-- Payment Summary -->
+        @if (paymentInfo()) {
+        <div class="review-block">
+          <div class="review-heading">
+            <mat-icon>{{ getIcon(paymentInfo()!.method) }}</mat-icon>
+            <h4>Payment Method</h4>
+          </div>
+          <p><strong>{{ getLabel(paymentInfo()!.method) }}</strong></p>
+          @if (paymentInfo()!.reference) {
+          <p class="ref">{{ paymentInfo()!.reference }}</p>
+          }
+          <button mat-button color="accent" class="edit-btn" (click)="goToStep(2)">Change</button>
+        </div>
+        }
+
+        <!-- Items -->
+        <div class="review-block">
+          <div class="review-heading">
+            <mat-icon>shopping_bag</mat-icon>
+            <h4>Items ({{ cart()?.totalItems ?? 0 }})</h4>
+          </div>
+          @for (item of cart()?.items ?? []; track item.id) {
+          <div class="review-item">
+            <span class="ri-name">{{ item.productName }}</span>
+            <span class="ri-qty">x{{ item.quantity }}</span>
+            <span class="ri-price">₹{{ item.lineTotal.toFixed(2) }}</span>
+          </div>
+          }
+        </div>
+
+        <div class="step-actions">
+          <button mat-stroked-button (click)="goToStep(2)">
+            Back
+          </button>
+          <button mat-flat-button color="primary" class="btn-place" [disabled]="submitting()" (click)="placeOrder()">
+            @if (submitting()) {
+            Placing Order...
+            } @else {
+            Place Order — ₹{{ (cart()?.subtotal ?? 0).toFixed(2) }}
+            }
+          </button>
+        </div>
+      </mat-card>
+      }
+
+    </div>
+
+    <!-- ─── Order Summary Sidebar ─── -->
+    <mat-card class="summary">
+      <h3>Order Summary</h3>
+      @for (item of cart()?.items ?? []; track item.id) {
+      <div class="summary-item">
+        <div class="si-text">
+          <span class="si-name">{{ item.productName }}</span>
+          <span class="si-qty">x{{ item.quantity }}</span>
+        </div>
+        <span class="si-price">₹{{ item.lineTotal.toFixed(2) }}</span>
+      </div>
+      }
+      <hr>
+      <div class="line"><span>Subtotal</span><span>₹{{ (cart()?.subtotal ?? 0).toFixed(2) }}</span></div>
+      <div class="line"><span>Shipping</span><span class="free-ship">Free</span></div>
+      <hr>
+      <div class="line total"><span>Total</span><span>₹{{ (cart()?.subtotal ?? 0).toFixed(2) }}</span></div>
+
+      @if (paymentInfo()) {
+      <div class="payment-badge">
+        <mat-icon class="pb-icon">{{ getIcon(paymentInfo()!.method) }}</mat-icon>
+        <div class="pb-text">
+          <strong>{{ getLabel(paymentInfo()!.method) }}</strong>
+          <span>Paid</span>
+        </div>
+      </div>
+      }
+
+      <div class="trust-badges">
+        <div class="trust-item"><mat-icon>lock</mat-icon><span>100% Secure</span></div>
+        <div class="trust-item"><mat-icon>verified_user</mat-icon><span>Encrypted</span></div>
+        <div class="trust-item"><mat-icon>support_agent</mat-icon><span>Mon–Sat Support</span></div>
+      </div>
+    </mat-card>
+  </div>
+  }
+</div>

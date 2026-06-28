@@ -1,0 +1,136 @@
+.back-btn { margin-bottom: 1rem; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+@media (max-width: 800px) { .detail-grid { grid-template-columns: 1fr; } }
+.images { position: sticky; top: 88px; align-self: start; }
+.main-img-wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--apollo-border);
+  border-radius: 10px;
+  background: #0a0d12;
+  box-shadow: var(--apollo-shadow), 0 0 40px rgba(0, 0, 0, 0.3);
+}
+.main-img-wrap::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: radial-gradient(circle at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.2) 100%);
+  pointer-events: none;
+}
+.main-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: saturate(1.1) contrast(1.05);
+  transition: opacity 400ms ease, transform 360ms ease;
+  opacity: 0;
+}
+.main-img.loaded { opacity: 1; }
+.thumbs {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 2px solid var(--apollo-border);
+  cursor: pointer;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 180ms ease;
+  background: #0a0d12;
+}
+.thumb-wrap:hover {
+  border-color: var(--apollo-soft);
+  transform: translateY(-2px);
+}
+.thumb-wrap.active {
+  border-color: var(--apollo-accent-2);
+  box-shadow: 0 0 16px rgba(255, 176, 32, 0.3);
+}
+.thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.65;
+  transition: opacity 200ms ease, transform 240ms ease;
+}
+.thumb-wrap:hover .thumb { opacity: 0.85; }
+.thumb-wrap.active .thumb { opacity: 1; transform: scale(1.02); }
+.cat { text-transform: uppercase; letter-spacing: 1px; color: var(--apollo-accent-2); font-size: 0.8rem; font-weight: 800; }
+h1 { margin: 0.25rem 0; color: var(--apollo-text); font-weight: 850; }
+.price-row { margin: 0.75rem 0; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.price.big { font-size: 1.85rem; }
+.price-compare.big { font-size: 1.05rem; opacity: 0.85; }
+.savings-tag {
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(69, 212, 131, 0.12);
+  border: 1px solid rgba(69, 212, 131, 0.3);
+  color: var(--apollo-success);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.discount-badge-detail {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  padding: 0.35rem 0.7rem;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--apollo-accent), #b72415);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  box-shadow: 0 4px 16px rgba(255, 61, 31, 0.4);
+}
+.rating { color: var(--apollo-accent-2); margin-bottom: 1rem; }
+.desc { line-height: 1.6; color: var(--apollo-soft); margin: 1rem 0; }
+.actions { margin-top: 1.5rem; }
+.btn-label { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+/* Premium Add to Cart CTA on the detail page */
+.actions .mat-mdc-unelevated-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 220px;
+  padding: 0 2rem !important;
+  height: 52px;
+  font-size: 1rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--apollo-accent), #b72415) !important;
+  box-shadow: 0 8px 24px rgba(255, 61, 31, 0.26);
+  transition: transform 160ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+.actions .mat-mdc-unelevated-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 32px rgba(255, 61, 31, 0.4), var(--apollo-glow);
+}
+.actions .mat-mdc-unelevated-button:not(:disabled):active { transform: translateY(0); }
+.actions .mat-mdc-unelevated-button:disabled { opacity: 0.5; }
+.reviews-section { margin-top: 3rem; }
+.review-card { margin-bottom: 1rem; padding: 1rem; }
+.review-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+.stars { color: var(--apollo-accent-2); }
+.date { color: var(--apollo-muted); font-size: 0.85rem; margin-left: auto; }
+.empty { color: var(--apollo-muted); text-align: center; padding: 2rem; }
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 5rem 2rem;
+  color: var(--apollo-muted);
+}
+.loader p { margin: 0; font-size: 0.9rem; }

@@ -1,0 +1,128 @@
+<section class="hero">
+  <div class="hero-kicker">⚡ India's #1 Performance Aero Brand</div>
+  <h1>Own the Road. Turn Every Head.</h1>
+  <p>Shop premium GT wings, lip spoilers, carbon-fibre splitters and full aero kits — engineered for race-grade
+    downforce, OEM-perfect fitment and jaw-dropping street presence. Free shipping across India + 1-Year warranty.</p>
+</section>
+
+<div class="layout">
+  <aside class="filters">
+    <h3>Filters</h3>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Search</mat-label>
+      <input matInput [(ngModel)]="filters.search" (ngModelChange)="applyFilters()"
+        placeholder="Spoiler, wing, brand...">
+    </mat-form-field>
+
+    <!-- <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Category</mat-label>
+      <mat-select [(ngModel)]="filters.categoryId" (ngModelChange)="applyFilters()">
+        <mat-option [value]="''">All</mat-option>
+        @for (cat of categories(); track cat.id) {
+          <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field> -->
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Car Brand</mat-label>
+      <mat-select [(ngModel)]="filters.carBrand" (ngModelChange)="onBrandChange()">
+        <mat-option [value]="''">All</mat-option>
+        @for (brand of carBrands(); track brand) {
+        <mat-option [value]="brand">{{ brand }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (filters.carBrand) {
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Car Model</mat-label>
+      <mat-select [(ngModel)]="filters.carModel" (ngModelChange)="applyFilters()">
+        <mat-option [value]="''">All</mat-option>
+        @for (model of carModels(); track model) {
+        <mat-option [value]="model">{{ model }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Max Price</mat-label>
+      <input matInput type="number" [(ngModel)]="filters.maxPrice" (ngModelChange)="applyFilters()" min="0">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Sort By</mat-label>
+      <mat-select [(ngModel)]="filters.sortBy" (ngModelChange)="applyFilters()">
+        <mat-option value="Newest">Newest</mat-option>
+        <mat-option value="PriceAscending">Price: Low to High</mat-option>
+        <mat-option value="PriceDescending">Price: High to Low</mat-option>
+        <mat-option value="Rating">Top Rated</mat-option>
+        <mat-option value="NameAscending">Name A-Z</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-stroked-button color="primary" (click)="resetFilters()">Reset</button>
+  </aside>
+
+  <div class="results">
+    @if (loading()) {
+    <div class="loading">Loading products...</div>
+    } @else if (result()?.items?.length === 0) {
+    <div class="empty">No products match your filters.</div>
+    } @else {
+    <div class="card-grid">
+      @for (p of result()?.items ?? []; track p.id) {
+      <mat-card class="product-card">
+        <a [routerLink]="['/products', p.slug]" class="card-img-link">
+          @if (discountPercent(p) > 0) {
+          <span class="discount-badge">-{{ discountPercent(p) }}%</span>
+          }
+          @if (p.isFeatured) {
+          <span class="featured-tag">Hot Deal</span>
+          }
+          <img [src]="environment.imageUrl + (p.primaryImageUrl || '')" [alt]="p.name" class="card-img"
+            (load)="$event.target.classList.add('loaded')" (error)="$event.target.src = '/assets/placeholder.svg'">
+        </a>
+        <mat-card-content>
+          <div class="card-category">{{ p.categoryName }}</div>
+          <a [routerLink]="['/products', p.slug]" class="card-title">{{ p.name }}</a>
+          <div class="card-meta">
+            @if (p.carBrand) { <span class="fit-badge">{{ p.carBrand }} {{ p.carModel }}</span> }
+            @if (p.stockQuantity > 0 && p.stockQuantity < 5) { <span class="stock-low">Only {{ p.stockQuantity }}
+              left!</span>
+              }
+          </div>
+          <div class="card-price-row">
+            <span class="price">
+              ₹{{ p.price | number:'1.0-0' }}
+            </span>
+
+            @if (p.compareAtPrice && p.compareAtPrice > p.price) {
+            <span class="price-compare">
+              ₹{{ p.compareAtPrice | number:'1.0-0' }}
+            </span>
+            }
+          </div>
+          @if (p.averageRating > 0) {
+          <div class="rating">★ {{ p.averageRating.toFixed(1) }} ({{ p.reviewCount }})</div>
+          }
+          <div class="free-ship"><mat-icon>local_shipping</mat-icon> Free Shipping</div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-flat-button color="primary" (click)="addToCart(p)" [disabled]="p.stockQuantity === 0">
+            <mat-icon>add_shopping_cart</mat-icon>
+            {{ p.stockQuantity === 0 ? 'Out of stock' : 'Add to Cart' }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+      }
+    </div>
+
+    <mat-paginator [length]="result()?.totalCount ?? 0" [pageSize]="pageSize()" [pageIndex]="page() - 1"
+      [pageSizeOptions]="[12, 24, 48]" (page)="onPageChange($event)">
+    </mat-paginator>
+    }
+  </div>
+</div>

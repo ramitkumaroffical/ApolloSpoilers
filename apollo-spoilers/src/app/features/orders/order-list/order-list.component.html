@@ -1,0 +1,47 @@
+<h1 class="section-title">Your Orders</h1>
+@if (loading()) {
+  <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate" diameter="44" color="accent"></mat-progress-spinner>
+    <p>Loading your orders...</p>
+  </div>
+} @else if (orders().length === 0) {
+  <div class="empty">
+    <mat-icon>receipt_long</mat-icon>
+    <p>You have no orders yet.</p>
+    <button mat-flat-button color="primary" routerLink="/">Start Shopping</button>
+  </div>
+} @else {
+  @for (o of orders(); track o.id) {
+    <mat-card class="order-card">
+      <div class="head">
+        <div>
+          <strong>{{ o.orderNumber }}</strong>
+          <span class="date">{{ o.createdAt | date:'medium' }}</span>
+        </div>
+        <div class="head-tags">
+          <mat-chip-set>
+            <mat-chip [color]="statusColor(o.status)">{{ o.status }}</mat-chip>
+          </mat-chip-set>
+          @if (o.paymentMethod) {
+            <span class="payment-tag">
+              <mat-icon>{{ o.paymentMethod === 'Card' ? 'credit_card' : o.paymentMethod === 'UPI' ? 'account_balance' : o.paymentMethod === 'Paytm' ? 'phone_android' : 'payments' }}</mat-icon>
+              {{ o.paymentMethod }}
+            </span>
+          }
+        </div>
+      </div>
+      <div class="items">
+        @for (item of o.items; track item.id) {
+          <div class="item">
+            <span>{{ item.productName }}</span>
+            <span>x{{ item.quantity }}</span>
+            <span class="right">₹{{ item.lineTotal.toFixed(2) }}</span>
+          </div>
+        }
+      </div>
+      <div class="total">
+        <span>Total</span><span>₹{{ o.totalAmount.toFixed(2) }}</span>
+      </div>
+    </mat-card>
+  }
+}
