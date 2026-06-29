@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: '/api/v1',
+  apiUrl: 'https://apollospoilers-api-asaneqb7crbfayc9.centralindia-01.azurewebsites.net',
 };
