@@ -140,6 +140,22 @@ builder.Services.AddScoped<IProductIndexer, ProductIndexer>();
 builder.Services.AddScoped<IAasraChatService, AasraChatService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
+
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+})
+.AddMvc()
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 // ---------- Controllers ----------
 builder.Services.AddControllers();
 
