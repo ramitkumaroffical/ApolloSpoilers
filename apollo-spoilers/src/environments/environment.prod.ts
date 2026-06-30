@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://apollospoilers.com/api/v1.0',
-  imageUrl: 'https://apollospoilers.com'
+  apiUrl: 'https://api.apollospoilers.com/api/v1',
+  imageUrl: 'https://api.apollospoilers.com'
 };
