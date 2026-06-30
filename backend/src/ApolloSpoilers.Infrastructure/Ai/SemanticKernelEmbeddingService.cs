@@ -16,19 +16,29 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
         ILogger<SemanticKernelEmbeddingService> logger)
     {
         _logger = logger;
+
         var baseUrl =
             config["Ai:Embedding:BaseUrl"]
             ?? "https://api-atlas.nomic.ai/v1";
+
         var apiKey =
             config["Ai:Embedding:ApiKey"];
 
-        _http = new HttpClient();
-        _http.BaseAddress = new Uri(
-            baseUrl.TrimEnd('/') + "/");
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri))
+            throw new InvalidOperationException(
+                $"Invalid Ai:Embedding:BaseUrl value: '{baseUrl}'. It must be an absolute URI like 'https://api-atlas.nomic.ai/v1'.");
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new InvalidOperationException(
+                "Ai:Embedding:ApiKey is missing or empty.");
+
+        _http = new HttpClient
+        {
+            BaseAddress = new Uri(baseUri.ToString().TrimEnd('/') + "/")
+        };
+
         _http.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue(
-                "Bearer",
-                apiKey);
+            new AuthenticationHeaderValue("Bearer", apiKey);
     }
 
     public int VectorSize => 768;
@@ -47,20 +57,28 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
     {
         try
         {
+            var textArray = texts?.Where(t => !string.IsNullOrWhiteSpace(t)).ToArray()
+                ?? Array.Empty<string>();
+
+            if (textArray.Length == 0)
+                return Array.Empty<ReadOnlyMemory<float>>();
+
             var body = new
             {
                 model = "nomic-embed-text-v1.5",
-                texts = texts.ToArray(),
-                task_type = "search_document" // use "search_query" when embedding a user's chat query
+                texts = textArray,
+                task_type = "search_document"
             };
 
-            var response = await _http.PostAsJsonAsync("embedding/text", body, ct);
+            using var response = await _http.PostAsJsonAsync("embedding/text", body, ct);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<NomicResponse>(ct);
 
-            return result!
-                .embeddings
+            if (result?.embeddings == null)
+                throw new InvalidOperationException("Embedding API returned no embeddings.");
+
+            return result.embeddings
                 .Select(e => new ReadOnlyMemory<float>(e))
                 .ToList();
         }
