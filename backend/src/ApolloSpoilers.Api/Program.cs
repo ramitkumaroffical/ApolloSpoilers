@@ -101,7 +101,8 @@ builder.Services.AddCors(options =>
                     "https://apollospoilers.com"
                 )
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowAnyMethod()
+                .AllowCredentials();
         });
 });
 
@@ -163,13 +164,14 @@ builder.Services.AddControllers();
 // ===================== BUILD =====================
 var app = builder.Build();
 
+
 // ---------- Port binding for Render ----------
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
-app.UseCors("AllowAngular");
-
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAngular");
 
 app.UseStaticFiles();
 
