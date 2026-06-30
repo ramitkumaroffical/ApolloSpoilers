@@ -1,106 +1,58 @@
 using ApolloSpoilers.Domain.Interfaces.Ai;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.Embeddings;
 
 namespace ApolloSpoilers.Infrastructure.Ai;
 
+/// <summary>
+/// OpenAI-compatible embedding service backed by Semantic Kernel. Works with
+/// Ollama (/v1), Groq, or OpenAI by swapping the configured base URL + model.
+/// </summary>
 public class SemanticKernelEmbeddingService : IEmbeddingService
 {
-    private readonly HttpClient _http;
+    private readonly ITextEmbeddingGenerationService _embedder;
     private readonly ILogger<SemanticKernelEmbeddingService> _logger;
+    private readonly int _vectorSize;
 
-    public SemanticKernelEmbeddingService(
-        IConfiguration config,
-        ILogger<SemanticKernelEmbeddingService> logger)
+    public SemanticKernelEmbeddingService(IConfiguration config, ILogger<SemanticKernelEmbeddingService> logger)
     {
         _logger = logger;
+        var baseUrl = config["Ai:Embedding:BaseUrl"] ?? config["Ai:Llm:BaseUrl"] ?? "http://localhost:11434/v1";
+        var apiKey = config["Ai:Embedding:ApiKey"] ?? config["Ai:Llm:ApiKey"] ?? "ollama-local";
+        var model = config["Ai:Embedding:Model"] ?? "nomic-embed-text";
 
-        var baseUrl = config["Ai:Embedding:BaseUrl"] ?? "https://api-atlas.nomic.ai/v1";
-        var apiKey = config["Ai:Embedding:ApiKey"];
+        var builder = Kernel.CreateBuilder();
+        builder.AddOpenAITextEmbeddingGeneration(modelId: model, apiKey: apiKey, httpClient: CreateHttpClient(baseUrl));
+        var kernel = builder.Build();
+        _embedder = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
 
-        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri))
-            throw new InvalidOperationException(
-                $"Invalid Ai:Embedding:BaseUrl value: '{baseUrl}'. It must be an absolute URI like 'https://api-atlas.nomic.ai/v1'.");
-
-        if (string.IsNullOrWhiteSpace(apiKey))
-            throw new InvalidOperationException("Ai:Embedding:ApiKey is missing or empty.");
-
-        _http = new HttpClient
-        {
-            BaseAddress = new Uri(baseUri.ToString().TrimEnd('/') + "/")
-        };
-
-        _http.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", apiKey);
+        // nomic-embed-text is 768-dim. We learn the true size lazily on first call.
+        _vectorSize = 768;
     }
 
-    public int VectorSize => 768;
+    public int VectorSize => _vectorSize;
 
-    public async Task<ReadOnlyMemory<float>> EmbedAsync(
-        string text,
-        CancellationToken ct = default)
+    public async Task<ReadOnlyMemory<float>> EmbedAsync(string text, CancellationToken ct = default)
     {
-        var results = await EmbedBatchAsync(new[] { text }, ct);
-        return results[0];
+        var vectors = await _embedder.GenerateEmbeddingsAsync(new[] { text }, cancellationToken: ct);
+        if (vectors is null || vectors.Count == 0)
+            throw new InvalidOperationException("Embedding service returned no vectors.");
+        return vectors[0];
     }
 
-    public async Task<IReadOnlyList<ReadOnlyMemory<float>>> EmbedBatchAsync(
-        IEnumerable<string> texts,
-        CancellationToken ct = default)
+    public async Task<IReadOnlyList<ReadOnlyMemory<float>>> EmbedBatchAsync(IEnumerable<string> texts, CancellationToken ct = default)
     {
-        try
-        {
-            var textArray = texts?.Where(t => !string.IsNullOrWhiteSpace(t)).ToArray()
-                ?? Array.Empty<string>();
-
-            if (textArray.Length == 0)
-                return Array.Empty<ReadOnlyMemory<float>>();
-
-            var body = new
-            {
-                model = "nomic-embed-text",
-                texts = textArray,
-                task_type = "search_document"
-            };
-
-            using var request = new HttpRequestMessage(HttpMethod.Post, "embedding/text")
-            {
-                Content = JsonContent.Create(body)
-            };
-
-            using var response = await _http.SendAsync(request, ct);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorText = await response.Content.ReadAsStringAsync(ct);
-                _logger.LogError(
-                    "Embedding API failed. Status: {StatusCode}, Response: {Response}",
-                    response.StatusCode,
-                    errorText);
-
-                throw new HttpRequestException($"Embedding API failed: {response.StatusCode}");
-            }
-
-            var result = await response.Content.ReadFromJsonAsync<NomicResponse>(ct);
-
-            if (result?.embeddings == null || result.embeddings.Count == 0)
-                throw new InvalidOperationException("Embedding API returned no embeddings.");
-
-            return result.embeddings
-                .Select(e => new ReadOnlyMemory<float>(e))
-                .ToList();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Embedding generation failed");
-            throw;
-        }
+        var list = texts.ToList();
+        var vectors = await _embedder.GenerateEmbeddingsAsync(list, cancellationToken: ct);
+        return vectors?.ToList() ?? new List<ReadOnlyMemory<float>>();
     }
 
-    private class NomicResponse
+    private static HttpClient CreateHttpClient(string baseUrl)
     {
-        public List<float[]> embeddings { get; set; } = new();
+        var http = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        return http;
     }
 }

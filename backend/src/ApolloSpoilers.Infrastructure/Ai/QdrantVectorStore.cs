@@ -18,38 +18,23 @@ public class QdrantVectorStore : IVectorStore
 
     public QdrantVectorStore(IConfiguration config, ILogger<QdrantVectorStore> logger)
     {
-        _logger = logger;
-
-        // FIX: Environment variables compatibility for Qdrant Endpoint
-        var endpoint = config["Ai__Qdrant__Endpoint"]
-                       ?? config["Ai:Qdrant:Endpoint"]
-                       ?? "http://localhost:6333";
-
+        // The configured endpoint is the REST port (default 6333). The Qdrant
+        // gRPC client MUST talk to the gRPC port (default 6334); pointing it at
+        // the REST port yields an HTTP/2 PROTOCOL_ERROR because REST answers in
+        // HTTP/1.1. Allow an explicit GrpcPort override, otherwise derive the
+        // gRPC port from the configured REST port.
+        var endpoint = config["Ai:Qdrant:Endpoint"] ?? "http://localhost:6333";
         var uri = new Uri(endpoint);
-        bool isHttps = uri.Scheme == "https";
 
-        // FIX: Cloud Qdrant usually works on standard gRPC port 443 over HTTPS, local usually on 6334
-        int defaultPort = isHttps ? 443 : 6334;
-        int grpcPort = defaultPort;
-
-        var portConfigStr = config["Ai__Qdrant__Port"] ?? config["Ai:Qdrant:Port"];
-        if (int.TryParse(portConfigStr, out var configuredGrpcPort) && configuredGrpcPort > 0)
-        {
+        // Default the gRPC port to 6334 (Qdrant's standard gRPC port), regardless
+        // of the REST port, unless an explicit override is provided.
+        int grpcPort = 6334;
+        if (int.TryParse(config["Ai:Qdrant:GrpcPort"], out var configuredGrpcPort) && configuredGrpcPort > 0)
             grpcPort = configuredGrpcPort;
-        }
 
-        // FIX: Environment variables compatibility for API Key
-        var apiKey = config["Ai__Qdrant__ApiKey"] ?? config["Ai:Qdrant:ApiKey"];
-
-        _client = new QdrantClient(
-            host: uri.Host,
-            port: grpcPort,
-            https: isHttps,
-            apiKey: apiKey
-        );
-
-        // FIX: Environment variables compatibility for Collection name
-        _collection = config["Ai__Qdrant__Collection"] ?? config["Ai:Qdrant:Collection"] ?? "apollo_products";
+        _client = new QdrantClient(host: uri.Host, port: grpcPort, https: uri.Scheme == "https");
+        _collection = config["Ai:Qdrant:Collection"] ?? "apollo_products";
+        _logger = logger;
     }
 
     public async Task EnsureCollectionAsync(int vectorSize, CancellationToken ct = default)
@@ -144,6 +129,8 @@ public class QdrantVectorStore : IVectorStore
     }
 
     // --- Value conversion helpers ---
+    // Value has implicit operators from string, long, bool, double only.
+
     private static Value ToValue(object o) => o switch
     {
         string s => s,

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using System.Net.Http.Headers;
 
 namespace ApolloSpoilers.Infrastructure.Ai;
 
@@ -18,17 +17,14 @@ public class SemanticKernelLlmService : ILlmService
 
     public SemanticKernelLlmService(IConfiguration config)
     {
-        // FIX: Added Environment Variables compatibility (Double Underscores fallback)
-        var baseUrl = config["Ai__Llm__BaseUrl"] ?? config["Ai:Llm:BaseUrl"] ?? "https://api.groq.com/openai/v1";
-        var apiKey = config["Ai__Llm__ApiKey"] ?? config["Ai:Llm:ApiKey"] ?? "ollama-local";
-        _model = config["Ai__Llm__Model"] ?? config["Ai:Llm:Model"] ?? "llama-3.3-70b-versatile";
+        var baseUrl = config["Ai:Llm:BaseUrl"] ?? "http://localhost:11434/v1";
+        var apiKey = config["Ai:Llm:ApiKey"] ?? "ollama-local";
+        _model = config["Ai:Llm:Model"] ?? "llama3";
 
-        // FIX: Config timeout fallbacks for production env
-        var timeoutSecondsStr = config["Ai__Chat__TimeoutSeconds"] ?? config["Ai:Chat:TimeoutSeconds"];
-        var timeoutSeconds = int.TryParse(timeoutSecondsStr, out var t) && t > 0 ? t : 120;
-
-        // FIX: Passing apiKey to attach the Authorization Bearer Header for Groq Cloud
-        var http = CreateHttpClient(baseUrl, apiKey, timeoutSeconds);
+        // Honor the configured chat timeout (default 120s). The HttpClient default
+        // of 100s is too short for CPU-bound local LLMs (e.g. llama3 on Ollama).
+        var timeoutSeconds = int.TryParse(config["Ai:Chat:TimeoutSeconds"], out var t) && t > 0 ? t : 120;
+        var http = new HttpClient { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromSeconds(timeoutSeconds) };
 
         var builder = Kernel.CreateBuilder();
         builder.AddOpenAIChatCompletion(modelId: _model, apiKey: apiKey, httpClient: http);
@@ -57,22 +53,5 @@ public class SemanticKernelLlmService : ILlmService
 
         var result = await _chat.GetChatMessageContentAsync(history, cancellationToken: ct);
         return result.Content ?? string.Empty;
-    }
-
-    // FIX: Created an authenticating HttpClient that attaches the Bearer token for Groq API
-    private static HttpClient CreateHttpClient(string baseUrl, string apiKey, int timeoutSeconds)
-    {
-        var http = new HttpClient
-        {
-            BaseAddress = new Uri(baseUrl),
-            Timeout = TimeSpan.FromSeconds(timeoutSeconds)
-        };
-
-        if (!string.IsNullOrEmpty(apiKey) && apiKey != "ollama-local")
-        {
-            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-        }
-
-        return http;
     }
 }

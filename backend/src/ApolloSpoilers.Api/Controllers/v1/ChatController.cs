@@ -1,56 +1,36 @@
+using Asp.Versioning;
+using ApolloSpoilers.Api.Common;
 using ApolloSpoilers.Application.DTOs;
 using ApolloSpoilers.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApolloSpoilers.Api.Controllers.v1;
 
 [ApiController]
-[Route("api/v1/[controller]")]
-public class ChatController : ControllerBase
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/chat")]
+public class ChatController : ApiControllerBase
 {
-    private readonly IAasraChatService _chatService;
+    private readonly IAasraChatService _aasra;
+    private readonly ICurrentUserService _currentUser;
 
-    public ChatController(IAasraChatService chatService)
+    public ChatController(IAasraChatService aasra, ICurrentUserService currentUser)
     {
-        _chatService = chatService;
+        _aasra = aasra;
+        _currentUser = currentUser;
     }
 
+    /// <summary>Send a message to Aasra, the AI shopping assistant.</summary>
+    /// <remarks>Anonymous (guest) use is allowed — the conversation is not persisted for guests.</remarks>
     [HttpPost]
-    public async Task<ActionResult<ChatResponseDto>> Send(
-        [FromBody] SendMessageDto dto,
-        CancellationToken ct)
-    {
-        var userId = GetUserId();
+    [AllowAnonymous]
+    public async Task<ActionResult<ChatResponseDto>> Send([FromBody] SendMessageDto dto, CancellationToken ct)
+        => ToActionResult(await _aasra.SendMessageAsync(_currentUser.UserId, dto, ct));
 
-        var result = await _chatService.SendMessageAsync(userId, dto, ct);
-
-        if (result.Value.SessionId == Guid.Empty &&
-            string.Equals(result.Value.Answer, "Chat session not found.", StringComparison.OrdinalIgnoreCase))
-        {
-            return NotFound(new
-            {
-                message = result.Value.Answer
-            });
-        }
-
-        if (result.Value.SessionId == Guid.Empty &&
-            string.Equals(result.Value.Answer, "Message cannot be empty.", StringComparison.OrdinalIgnoreCase))
-        {
-            return BadRequest(new
-            {
-                message = result.Value.Answer
-            });
-        }
-
-        return Ok(result.Value);
-    }
-
-    private Guid? GetUserId()
-    {
-        var userIdClaim = User?.FindFirst("sub")?.Value
-            ?? User?.FindFirst("userId")?.Value
-            ?? User?.FindFirst("id")?.Value;
-
-        return Guid.TryParse(userIdClaim, out var id) ? id : null;
-    }
+    /// <summary>Get conversation history for a chat session.</summary>
+    [HttpGet("{sessionId:guid}/history")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<ChatMessageDto>>> History(Guid sessionId, CancellationToken ct)
+        => Ok(await _aasra.GetHistoryAsync(sessionId, ct));
 }

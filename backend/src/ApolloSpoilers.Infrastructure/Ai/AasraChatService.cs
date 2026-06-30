@@ -12,6 +12,11 @@ using Microsoft.Extensions.Logging;
 
 namespace ApolloSpoilers.Infrastructure.Ai;
 
+/// <summary>
+/// Aasra — Apollo Spoilers' AI assistant. Orchestrates the full RAG pipeline:
+/// embed user query → search Qdrant → assemble prompt with retrieved context →
+/// generate answer via Semantic Kernel LLM → persist the conversation turn.
+/// </summary>
 public class AasraChatService : IAasraChatService
 {
     private const string SystemPersona = """
@@ -57,61 +62,30 @@ public class AasraChatService : IAasraChatService
         _logger = logger;
     }
 
-    public async Task<Result<ChatResponseDto>> SendMessageAsync(
-        Guid? userId,
-        SendMessageDto dto,
-        CancellationToken ct = default)
+    public async Task<Result<ChatResponseDto>> SendMessageAsync(Guid? userId, SendMessageDto dto, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(dto.Message))
-        {
-            return Result.Success(new ChatResponseDto
-            {
-                SessionId = Guid.Empty,
-                Answer = "Message cannot be empty.",
-                Sources = Array.Empty<ChatSourceDto>()
-            });
-        }
-
         ChatSession? session = null;
-
         if (userId.HasValue)
         {
             if (dto.SessionId.HasValue)
             {
-                session = (await _uow.Repository<ChatSession>()
-                    .ListAsync(new ChatSessionByIdSpecification(dto.SessionId.Value), ct))
-                    .FirstOrDefault();
-
-                if (session is null)
-                {
-                    _logger.LogWarning("Chat session not found: {SessionId}", dto.SessionId);
-                    return Result.Success(new ChatResponseDto
-                    {
-                        SessionId = Guid.Empty,
-                        Answer = "Chat session not found.",
-                        Sources = Array.Empty<ChatSourceDto>()
-                    });
-                }
+                session = (await _uow.Repository<ChatSession>().ListAsync(new ChatSessionByIdSpecification(dto.SessionId.Value), ct)).FirstOrDefault()
+                          ?? throw new KeyNotFoundException("Chat session not found.");
             }
             else
             {
-                session = new ChatSession
-                {
-                    UserId = userId.Value,
-                    Title = Truncate(dto.Message, 50)
-                };
-
+                session = new ChatSession { UserId = userId.Value, Title = Truncate(dto.Message, 50) };
                 await _uow.Repository<ChatSession>().AddAsync(session, ct);
                 await _uow.SaveChangesAsync(ct);
             }
 
+            // 1. Persist the user turn
             await _uow.Repository<ChatMessage>().AddAsync(new ChatMessage
             {
                 SessionId = session.Id,
                 Role = ChatRole.User,
                 Content = dto.Message
             }, ct);
-
             await _uow.SaveChangesAsync(ct);
         }
 
@@ -120,13 +94,10 @@ public class AasraChatService : IAasraChatService
 
         try
         {
+            // 2. RAG retrieval
             await _vectorStore.EnsureCollectionAsync(_embedder.VectorSize, ct);
             var queryVector = await _embedder.EmbedAsync(dto.Message, ct);
-
-            var topKStr = _config["Ai__Chat__TopK"] ?? _config["Ai:Chat:TopK"] ?? "5";
-            if (!int.TryParse(topKStr, out var topK) || topK <= 0)
-                topK = 5;
-
+            var topK = int.Parse(_config["Ai:Chat:TopK"] ?? "5");
             var hits = await _vectorStore.SearchAsync(queryVector, topK, ct);
 
             sources = hits.Select(h => new ChatSourceDto
@@ -138,6 +109,7 @@ public class AasraChatService : IAasraChatService
                 Score = h.Score
             }).ToList();
 
+            // 3. Build the augmented prompt
             var contextBlock = BuildContextBlock(hits);
             var history = session is null
                 ? Array.Empty<LlmMessage>()
@@ -148,10 +120,10 @@ public class AasraChatService : IAasraChatService
                 new(LlmRole.System, SystemPersona),
                 new(LlmRole.System, $"Retrieved product context:\n{contextBlock}")
             };
-
             messages.AddRange(history);
             messages.Add(new LlmMessage(LlmRole.User, dto.Message));
 
+            // 4. Generate
             answer = await _llm.CompleteAsync(messages, ct);
         }
         catch (Exception ex)
@@ -160,6 +132,7 @@ public class AasraChatService : IAasraChatService
             answer = "I'm sorry, I couldn't reach my knowledge base right now. Please try again in a moment.";
         }
 
+        // 5. Persist the assistant turn (authenticated users only)
         if (session is not null)
         {
             await _uow.Repository<ChatMessage>().AddAsync(new ChatMessage
@@ -169,7 +142,6 @@ public class AasraChatService : IAasraChatService
                 Content = answer,
                 Sources = JsonSerializer.Serialize(sources)
             }, ct);
-
             await _uow.SaveChangesAsync(ct);
         }
 
@@ -181,14 +153,9 @@ public class AasraChatService : IAasraChatService
         });
     }
 
-    public async Task<IReadOnlyList<ChatMessageDto>> GetHistoryAsync(
-        Guid sessionId,
-        CancellationToken ct = default)
+    public async Task<IReadOnlyList<ChatMessageDto>> GetHistoryAsync(Guid sessionId, CancellationToken ct = default)
     {
-        var session = (await _uow.Repository<ChatSession>()
-            .ListAsync(new ChatSessionByIdSpecification(sessionId), ct))
-            .FirstOrDefault();
-
+        var session = (await _uow.Repository<ChatSession>().ListAsync(new ChatSessionByIdSpecification(sessionId), ct)).FirstOrDefault();
         if (session is null) return Array.Empty<ChatMessageDto>();
 
         return session.Messages
@@ -203,20 +170,12 @@ public class AasraChatService : IAasraChatService
             .ToList();
     }
 
-    private async Task<IReadOnlyList<LlmMessage>> BuildHistoryAsync(
-        Guid sessionId,
-        CancellationToken ct)
+    private async Task<IReadOnlyList<LlmMessage>> BuildHistoryAsync(Guid sessionId, CancellationToken ct)
     {
-        var session = (await _uow.Repository<ChatSession>()
-            .ListAsync(new ChatSessionByIdSpecification(sessionId), ct))
-            .FirstOrDefault();
-
+        var session = (await _uow.Repository<ChatSession>().ListAsync(new ChatSessionByIdSpecification(sessionId), ct)).FirstOrDefault();
         if (session is null) return Array.Empty<LlmMessage>();
 
-        var historyCountStr = _config["Ai__Chat__HistoryMessages"] ?? _config["Ai:Chat:HistoryMessages"] ?? "10";
-        if (!int.TryParse(historyCountStr, out var historyCount) || historyCount <= 0)
-            historyCount = 10;
-
+        var historyCount = int.Parse(_config["Ai:Chat:HistoryMessages"] ?? "10");
         return session.Messages
             .OrderByDescending(m => m.CreatedAt)
             .Take(historyCount)
