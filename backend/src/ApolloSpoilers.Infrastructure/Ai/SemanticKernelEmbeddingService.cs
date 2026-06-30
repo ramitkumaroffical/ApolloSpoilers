@@ -17,16 +17,12 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
     {
         _logger = logger;
 
-        var baseUrl =
-            config["Ai:Embedding:BaseUrl"]
-            ?? "https://api-atlas.nomic.ai/v1";
-
-        var apiKey =
-            config["Ai:Embedding:ApiKey"];
+        var baseUrl = config["Ai:Embedding:BaseUrl"] ?? "https://api-atlas.nomic.ai/v1";
+        var apiKey = config["Ai:Embedding:ApiKey"];
 
         if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri))
             throw new InvalidOperationException(
-                $"Invalid Ai:Embedding:BaseUrl value: '{baseUrl}'. It must be an absolute URI like 'https://api-atlas.nomic.ai/v1'.");
+                $"Invalid Ai:Embedding:BaseUrl value: '{baseUrl}'.");
 
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException(
@@ -71,11 +67,21 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
             };
 
             using var response = await _http.PostAsJsonAsync("embedding/text", body, ct);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorText = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogError(
+                    "Embedding API failed. Status: {StatusCode}, Response: {Response}",
+                    response.StatusCode,
+                    errorText);
+
+                response.EnsureSuccessStatusCode();
+            }
 
             var result = await response.Content.ReadFromJsonAsync<NomicResponse>(ct);
 
-            if (result?.embeddings == null)
+            if (result?.embeddings == null || result.embeddings.Count == 0)
                 throw new InvalidOperationException("Embedding API returned no embeddings.");
 
             return result.embeddings
