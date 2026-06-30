@@ -1,16 +1,17 @@
 using ApolloSpoilers.Domain.Interfaces.Ai;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.SemanticKernel.Embeddings;
-
-namespace ApolloSpoilers.Infrastructure.Ai;
+using System.Net.Http.Json;
 
 public class SemanticKernelEmbeddingService : IEmbeddingService
 {
-    private readonly ITextEmbeddingGenerationService _embedder;
+    private readonly HttpClient _http;
     private readonly ILogger<SemanticKernelEmbeddingService> _logger;
+
+    private readonly string _model;
+
+    public int VectorSize => 768;
+
 
     public SemanticKernelEmbeddingService(
         IConfiguration config,
@@ -18,81 +19,75 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
     {
         _logger = logger;
 
-        var baseUrl =
-            config["Ai:Embedding:BaseUrl"]
-            ?? "https://api-inference.huggingface.co/v1";
-
-        var apiKey =
-            config["Ai:Embedding:ApiKey"]
-            ?? throw new InvalidOperationException(
-                "Embedding API key missing.");
-
-        var model =
-            config["Ai:Embedding:Model"]
-            ?? "sentence-transformers/all-MiniLM-L6-v2";
+        _model = config["Ai:Embedding:Model"]
+                 ?? "nomic-ai/nomic-embed-text-v1.5";
 
 
-        var builder = Kernel.CreateBuilder();
+        _http = new HttpClient();
 
-        builder.AddOpenAITextEmbeddingGeneration(
-            modelId: model,
-            apiKey: apiKey,
-            httpClient: CreateHttpClient(baseUrl)
-        );
-
-        var kernel = builder.Build();
-
-        _embedder =
-            kernel.GetRequiredService<ITextEmbeddingGenerationService>();
+        _http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                config["Ai:Embedding:ApiKey"]);
     }
-
-
-    public int VectorSize => 384;
 
 
     public async Task<ReadOnlyMemory<float>> EmbedAsync(
         string text,
         CancellationToken ct = default)
     {
-        var vectors =
-            await _embedder.GenerateEmbeddingsAsync(
-                new[] { text },
-                cancellationToken: ct);
+
+        var body = new
+        {
+            inputs = text
+        };
 
 
-        if (vectors == null || vectors.Count == 0)
-            throw new InvalidOperationException(
-                "Embedding service returned no vectors.");
+        var response = await _http.PostAsJsonAsync(
+            $"https://api-inference.huggingface.co/models/{_model}",
+            body,
+            ct);
 
 
-        return vectors[0];
+        response.EnsureSuccessStatusCode();
+
+
+        var result =
+            await response.Content.ReadFromJsonAsync<float[][]>(ct);
+
+
+        if (result == null || result.Length == 0)
+            throw new Exception("No embedding returned");
+
+
+        return result[0];
     }
+
 
 
     public async Task<IReadOnlyList<ReadOnlyMemory<float>>> EmbedBatchAsync(
         IEnumerable<string> texts,
         CancellationToken ct = default)
     {
+
         var list = texts.ToList();
 
-        var vectors =
-            await _embedder.GenerateEmbeddingsAsync(
-                list,
-                cancellationToken: ct);
+        var response = await _http.PostAsJsonAsync(
+            $"https://api-inference.huggingface.co/models/{_model}",
+            new { inputs = list },
+            ct);
 
 
-        return vectors?.ToList()
-            ?? new List<ReadOnlyMemory<float>>();
-    }
+        response.EnsureSuccessStatusCode();
 
 
-    private static HttpClient CreateHttpClient(string baseUrl)
-    {
-        var http = new HttpClient
-        {
-            BaseAddress = new Uri(baseUrl)
-        };
+        var result =
+            await response.Content.ReadFromJsonAsync<float[][]>(ct);
 
-        return http;
+
+        return result?
+            .Select(x => new ReadOnlyMemory<float>(x))
+            .ToList()
+            ?? [];
     }
 }
