@@ -25,6 +25,7 @@ public class QdrantVectorStore : IVectorStore
         // gRPC port from the configured REST port.
         var endpoint = config["Ai:Qdrant:Endpoint"] ?? "http://localhost:6333";
         var uri = new Uri(endpoint);
+        var apiKey = config["Ai:Qdrant:ApiKey"];
 
         // Default the gRPC port to 6334 (Qdrant's standard gRPC port), regardless
         // of the REST port, unless an explicit override is provided.
@@ -32,7 +33,7 @@ public class QdrantVectorStore : IVectorStore
         if (int.TryParse(config["Ai:Qdrant:GrpcPort"], out var configuredGrpcPort) && configuredGrpcPort > 0)
             grpcPort = configuredGrpcPort;
 
-        _client = new QdrantClient(host: uri.Host, port: grpcPort, https: uri.Scheme == "https");
+        _client = new QdrantClient(host: uri.Host,port: grpcPort, https: uri.Scheme == "https", apiKey: apiKey);
         _collection = config["Ai:Qdrant:Collection"] ?? "apollo_products";
         _logger = logger;
     }
