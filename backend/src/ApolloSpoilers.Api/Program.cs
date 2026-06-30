@@ -42,18 +42,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // ---------- Identity ----------
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
-    {
-        options.Password.RequireDigit = true;
-        options.Password.RequireUppercase = true;
-        options.Password.RequireNonAlphanumeric = true;
-        options.Password.RequiredLength = 8;
-        options.User.RequireUniqueEmail = true;
-    })
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 8;
+    options.User.RequireUniqueEmail = true;
+})
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
 // ---------- Identity token lifespan (password-reset tokens) ----------
-// Default is 1 hour; extend to 2 hours for a more forgiving reset window.
 builder.Services.Configure<DataProtectionTokenProviderOptions>(
     options => options.TokenLifespan = TimeSpan.FromHours(2));
 
@@ -72,17 +71,16 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,    
+        ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ClockSkew = TimeSpan.Zero
     };
-
 });
 builder.Services.AddAuthorization();
 
-// ---------- CORS ----------
+// ---------- CORS Configuration ----------
 var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? new[] { "http://localhost:4200" };
 builder.Services.AddCors(o => o.AddPolicy("ApolloCors", policy =>
     policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
@@ -119,102 +117,3 @@ builder.Services.AddSingleton<ILlmService, SemanticKernelLlmService>();
 builder.Services.AddScoped<IProductIndexer, ProductIndexer>();
 builder.Services.AddScoped<IAasraChatService, AasraChatService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
-
-// ---------- API versioning ----------
-builder.Services.AddApiVersioning(options =>
-{
-    options.DefaultApiVersion = new ApiVersion(1, 0);
-    options.AssumeDefaultVersionWhenUnspecified = true;
-    options.ReportApiVersions = true;
-}).AddApiExplorer(options =>
-{
-    options.GroupNameFormat = "'v'VVV";
-    options.SubstituteApiVersionInUrl = true;
-});
-
-// ---------- MVC + Swagger ----------
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Apollo Spoilers API", Version = "v1" });
-
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization. Example: \"Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
-
-var app = builder.Build();
-app.UseStaticFiles();
-
-// ---------- Migrate + seed ----------
-using (var scope = app.Services.CreateScope())
-{
-    var sp = scope.ServiceProvider;
-    try
-    {
-        var db = sp.GetRequiredService<ApplicationDbContext>();
-        await db.Database.MigrateAsync();
-
-        var userManager = sp.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = sp.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-        await ApplicationDbContextSeed.SeedAsync(db, userManager, roleManager);
-    }
-    catch (Exception ex)
-    {
-        Log.Logger.Error(ex, "Database migration/seed failed.");
-    }
-}
-
-// ---------- Populate the Aasra RAG knowledge base (Qdrant) ----------
-// Runs once on startup in the background so the API stays responsive.
-// Idempotent: re-embedding the catalog simply overwrites existing points.
-// If Ollama/Qdrant are unavailable, it fails gracefully without crashing startup.
-_ = Task.Run(async () =>
-{
-    try
-    {
-        using var scope = app.Services.CreateScope();
-        var indexer = scope.ServiceProvider.GetRequiredService<IProductIndexer>();
-        Log.Logger.Information("Aasra: starting catalog reindex into Qdrant...");
-        await indexer.ReindexAllAsync();
-        Log.Logger.Information("Aasra: catalog reindex complete.");
-    }
-    catch (Exception ex)
-    {
-        Log.Logger.Error(ex, "Aasra: catalog reindex failed (Qdrant/Ollama may be unavailable). The assistant will still run but with an empty knowledge base.");
-    }
-});
-
-// ---------- Middleware pipeline ----------
-app.UseMiddleware<GlobalExceptionMiddleware>();
-app.UseSerilogRequestLogging();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-app.UseCors("ApolloCors");
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-
-app.MapGet("/", () => new { name = "Apollo Spoilers API", version = "v1", status = "running" });
-
-app.Run();
