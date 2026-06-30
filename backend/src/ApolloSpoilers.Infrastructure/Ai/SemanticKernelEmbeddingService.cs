@@ -1,96 +1,50 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using ApolloSpoilers.Domain.Interfaces.Ai;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using System.Net.Http.Json;
 
-public class SemanticKernelEmbeddingService : IEmbeddingService
+public class OllamaEmbeddingService : IEmbeddingService
 {
     private readonly HttpClient _http;
-    private readonly ILogger<SemanticKernelEmbeddingService> _logger;
-
-    private readonly string _model;
 
     public int VectorSize => 768;
 
-    public SemanticKernelEmbeddingService(
-        IConfiguration config,
-        ILogger<SemanticKernelEmbeddingService> logger)
+    public OllamaEmbeddingService()
     {
-        _logger = logger;
-
-        _model = config["Ai:Embedding:Model"]
-                 ?? "nomic-ai/nomic-embed-text-v1.5";
-
         _http = new HttpClient
         {
-            BaseAddress = new Uri("https://router.huggingface.co")
+            BaseAddress = new Uri("http://localhost:11434")
         };
-
-        _http.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue(
-                "Bearer",
-                config["Ai:Embedding:ApiKey"]);
     }
 
     public async Task<ReadOnlyMemory<float>> EmbedAsync(string text, CancellationToken ct = default)
     {
-        try
+        var response = await _http.PostAsJsonAsync("/api/embeddings", new
         {
-            var response = await _http.PostAsJsonAsync(
-                "/v1/embeddings",
-                new
-                {
-                    model = _model,
-                    input = text
-                },
-                ct);
+            model = "nomic-embed-text",
+            prompt = text
+        }, ct);
 
-            response.EnsureSuccessStatusCode();
+        response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<EmbeddingResponse>(ct);
+        var result = await response.Content.ReadFromJsonAsync<OllamaResponse>(ct);
 
-            if (result?.data == null || result.data.Length == 0)
-                throw new Exception("No embedding returned");
-
-            return result.data[0].embedding;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Embedding failed");
-            throw;
-        }
+        return result?.embedding ?? [];
     }
 
     public async Task<IReadOnlyList<ReadOnlyMemory<float>>> EmbedBatchAsync(
         IEnumerable<string> texts,
         CancellationToken ct = default)
     {
-        var response = await _http.PostAsJsonAsync(
-            "/v1/embeddings",
-            new
-            {
-                model = _model,
-                input = texts.ToList()
-            },
-            ct);
+        var list = new List<ReadOnlyMemory<float>>();
 
-        response.EnsureSuccessStatusCode();
+        foreach (var t in texts)
+        {
+            list.Add(await EmbedAsync(t, ct));
+        }
 
-        var result = await response.Content.ReadFromJsonAsync<EmbeddingResponse>(ct);
-
-        return result?.data?
-            .Select(x => new ReadOnlyMemory<float>(x.embedding))
-            .ToList()
-            ?? [];
+        return list;
     }
 
-    private class EmbeddingResponse
-    {
-        public EmbeddingItem[] data { get; set; } = [];
-    }
-
-    private class EmbeddingItem
+    private class OllamaResponse
     {
         public float[] embedding { get; set; } = [];
     }
