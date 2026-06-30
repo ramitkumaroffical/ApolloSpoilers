@@ -19,13 +19,13 @@ public class QdrantVectorStore : IVectorStore
     public QdrantVectorStore(IConfiguration config, ILogger<QdrantVectorStore> logger)
     {
         var endpoint = config["Ai:Qdrant:Endpoint"]
-                   ?? "http://localhost:6333";
+                             ?? "http://localhost:6333";
 
         var uri = new Uri(endpoint);
 
         int grpcPort = 6334;
 
-        if (int.TryParse(config["Ai:Qdrant:GrpcPort"], out var configuredGrpcPort)
+        if (int.TryParse(config["Ai:Qdrant:Port"], out var configuredGrpcPort)
             && configuredGrpcPort > 0)
         {
             grpcPort = configuredGrpcPort;
