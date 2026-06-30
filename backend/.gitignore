@@ -359,5 +359,9 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+!backend/src/ApolloSpoilers.Api/wwwroot/
+!backend/src/ApolloSpoilers.Api/wwwroot/images/
+!backend/src/ApolloSpoilers.Api/wwwroot/images/products/
+
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
