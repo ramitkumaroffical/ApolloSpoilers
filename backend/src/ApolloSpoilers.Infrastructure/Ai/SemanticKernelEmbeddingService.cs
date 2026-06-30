@@ -16,31 +16,33 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
         ILogger<SemanticKernelEmbeddingService> logger)
     {
         _logger = logger;
-
         var baseUrl =
             config["Ai__Embedding__BaseUrl"]
             ?? "https://api-atlas.nomic.ai/v1";
-
         var apiKey =
             config["Ai__Embedding__ApiKey"];
 
         _http = new HttpClient();
-
         _http.BaseAddress = new Uri(
             baseUrl.TrimEnd('/') + "/");
-
         _http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue(
                 "Bearer",
                 apiKey);
     }
 
-
     public int VectorSize => 768;
-
 
     public async Task<ReadOnlyMemory<float>> EmbedAsync(
         string text,
+        CancellationToken ct = default)
+    {
+        var results = await EmbedBatchAsync(new[] { text }, ct);
+        return results[0];
+    }
+
+    public async Task<IReadOnlyList<ReadOnlyMemory<float>>> EmbedBatchAsync(
+        IEnumerable<string> texts,
         CancellationToken ct = default)
     {
         try
@@ -48,67 +50,29 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
             var body = new
             {
                 model = "nomic-embed-text-v1.5",
-                input = new[]
-                {
-                    text
-                }
+                texts = texts.ToArray(),
+                task_type = "search_document" // use "search_query" when embedding a user's chat query
             };
 
-
-            var response =
-                await _http.PostAsJsonAsync(
-                    "embeddings",
-                    body,
-                    ct);
-
-
+            var response = await _http.PostAsJsonAsync("embedding/text", body, ct);
             response.EnsureSuccessStatusCode();
 
-
-            var result =
-                await response.Content.ReadFromJsonAsync<NomicResponse>(ct);
-
+            var result = await response.Content.ReadFromJsonAsync<NomicResponse>(ct);
 
             return result!
-                .data[0]
-                .embedding;
-
+                .embeddings
+                .Select(e => new ReadOnlyMemory<float>(e))
+                .ToList();
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "Embedding generation failed");
-
+            _logger.LogError(ex, "Embedding generation failed");
             throw;
         }
     }
 
-
-    public async Task<IReadOnlyList<ReadOnlyMemory<float>>> EmbedBatchAsync(
-        IEnumerable<string> texts,
-        CancellationToken ct = default)
-    {
-        var result = new List<ReadOnlyMemory<float>>();
-
-        foreach (var text in texts)
-        {
-            result.Add(
-                await EmbedAsync(text, ct));
-        }
-
-        return result;
-    }
-
-
     private class NomicResponse
     {
-        public List<DataItem> data { get; set; } = new();
-    }
-
-
-    private class DataItem
-    {
-        public float[] embedding { get; set; } = Array.Empty<float>();
+        public List<float[]> embeddings { get; set; } = new();
     }
 }
