@@ -18,23 +18,31 @@ public class QdrantVectorStore : IVectorStore
 
     public QdrantVectorStore(IConfiguration config, ILogger<QdrantVectorStore> logger)
     {
-        // The configured endpoint is the REST port (default 6333). The Qdrant
-        // gRPC client MUST talk to the gRPC port (default 6334); pointing it at
-        // the REST port yields an HTTP/2 PROTOCOL_ERROR because REST answers in
-        // HTTP/1.1. Allow an explicit GrpcPort override, otherwise derive the
-        // gRPC port from the configured REST port.
-        var endpoint = config["Ai:Qdrant:Endpoint"] ?? "http://localhost:6333";
+        var endpoint = config["Ai:Qdrant:Endpoint"]
+                   ?? "http://localhost:6333";
+
         var uri = new Uri(endpoint);
 
-        // Default the gRPC port to 6334 (Qdrant's standard gRPC port), regardless
-        // of the REST port, unless an explicit override is provided.
         int grpcPort = 6334;
-        if (int.TryParse(config["Ai:Qdrant:GrpcPort"], out var configuredGrpcPort) && configuredGrpcPort > 0)
-            grpcPort = configuredGrpcPort;
 
-        _client = new QdrantClient(host: uri.Host, port: grpcPort, https: uri.Scheme == "https");
+        if (int.TryParse(config["Ai:Qdrant:GrpcPort"], out var configuredGrpcPort)
+            && configuredGrpcPort > 0)
+        {
+            grpcPort = configuredGrpcPort;
+        }
+
+        var apiKey = config["Ai:Qdrant:ApiKey"];
+
+        _client = new QdrantClient(
+            host: uri.Host,
+            port: grpcPort,
+            https: uri.Scheme == "https",
+            apiKey: apiKey
+        );
+
         _collection = config["Ai:Qdrant:Collection"] ?? "apollo_products";
         _logger = logger;
+
     }
 
     public async Task EnsureCollectionAsync(int vectorSize, CancellationToken ct = default)
