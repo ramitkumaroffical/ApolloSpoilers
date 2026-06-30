@@ -90,14 +90,21 @@ var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
         "https://www.apollospoilers.com"
     };
 
-builder.Services.AddCors(o => o.AddPolicy("ApolloCors", policy =>
+builder.Services.AddCors(options =>
 {
-    policy
-        .WithOrigins(origins)
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
-}));
+    options.AddPolicy("ApolloCors", policy =>
+    {
+        policy
+            .WithOrigins(
+                "https://www.apollospoilers.com",
+                "https://apollospoilers.com",
+                "http://localhost:4200"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 
 // ---------- AutoMapper, validators ----------
@@ -137,18 +144,6 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 // ---------- Controllers ----------
 builder.Services.AddControllers();
 
-builder.Services.AddApiVersioning(options =>
-{
-    options.DefaultApiVersion = new ApiVersion(1, 0);
-    options.AssumeDefaultVersionWhenUnspecified = true;
-    options.ReportApiVersions = true;
-})
-.AddMvc()
-.AddApiExplorer(options =>
-{
-    options.GroupNameFormat = "'v'VVV";
-    options.SubstituteApiVersionInUrl = true;
-});
 
 // ===================== BUILD =====================
 var app = builder.Build();
@@ -157,11 +152,12 @@ var app = builder.Build();
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
-app.UseHttpsRedirection();
-
 app.UseCors("ApolloCors");
 
+app.UseHttpsRedirection();
+
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
