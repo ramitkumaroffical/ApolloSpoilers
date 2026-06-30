@@ -17,10 +17,10 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
     {
         _logger = logger;
         var baseUrl =
-            config["Ai__Embedding__BaseUrl"]
+            config["Ai:Embedding:BaseUrl"]
             ?? "https://api-atlas.nomic.ai/v1";
         var apiKey =
-            config["Ai__Embedding__ApiKey"];
+            config["Ai:Embedding:ApiKey"];
 
         _http = new HttpClient();
         _http.BaseAddress = new Uri(
