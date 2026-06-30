@@ -92,18 +92,17 @@ var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("ApolloCors", policy =>
-    {
-        policy
-            .WithOrigins(
-                "https://www.apollospoilers.com",
-                "https://apollospoilers.com",
-                "http://localhost:4200"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
+    options.AddPolicy("AllowAngular",
+        policy =>
+        {
+            policy
+                .WithOrigins(
+                    "https://www.apollospoilers.com",
+                    "https://apollospoilers.com"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
 });
 
 
@@ -152,7 +151,7 @@ var app = builder.Build();
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
-app.UseCors("ApolloCors");
+app.UseCors("AllowAngular");
 
 app.UseHttpsRedirection();
 
