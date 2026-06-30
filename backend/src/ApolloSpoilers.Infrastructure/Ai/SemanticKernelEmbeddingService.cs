@@ -1,94 +1,113 @@
 using ApolloSpoilers.Domain.Interfaces.Ai;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.SemanticKernel.Embeddings;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace ApolloSpoilers.Infrastructure.Ai;
 
-/// <summary>
-/// OpenAI-compatible embedding service backed by Semantic Kernel. Works with
-/// Ollama (/v1), Groq, or OpenAI by swapping the configured base URL + model.
-/// </summary>
 public class SemanticKernelEmbeddingService : IEmbeddingService
 {
-    private readonly ITextEmbeddingGenerationService _embedder;
+    private readonly HttpClient _http;
     private readonly ILogger<SemanticKernelEmbeddingService> _logger;
-    private readonly int _vectorSize;
 
-    public SemanticKernelEmbeddingService(IConfiguration config, ILogger<SemanticKernelEmbeddingService> logger)
+    public SemanticKernelEmbeddingService(
+        IConfiguration config,
+        ILogger<SemanticKernelEmbeddingService> logger)
     {
         _logger = logger;
 
-        // FIX: Added Environment Variables compatibility (Double Underscores fallback)
-        var baseUrl = config["Ai__Embedding__BaseUrl"] ?? config["Ai:Embedding:BaseUrl"] ??
-                      config["Ai__Llm__BaseUrl"] ?? config["Ai:Llm:BaseUrl"] ?? "https://api-atlas.nomic.ai/v1";
+        var baseUrl =
+            config["Ai__Embedding__BaseUrl"]
+            ?? "https://api-atlas.nomic.ai/v1";
 
-        var apiKey = config["Ai__Embedding__ApiKey"] ?? config["Ai:Embedding:ApiKey"] ??
-                     config["Ai__Llm__ApiKey"] ?? config["Ai:Llm:ApiKey"] ?? "ollama-local";
+        var apiKey =
+            config["Ai__Embedding__ApiKey"];
 
-        var model = config["Ai__Embedding__Model"] ?? config["Ai:Embedding:Model"] ?? "nomic-embed-text-v1.5";
+        _http = new HttpClient();
 
-        var builder = Kernel.CreateBuilder();
+        _http.BaseAddress = new Uri(baseUrl);
 
-        // FIX: Passing the authenticating HTTP Client required for Nomic Cloud
-        builder.AddOpenAITextEmbeddingGeneration(
-            modelId: model,
-            apiKey: apiKey,
-            httpClient: CreateHttpClient(baseUrl, apiKey));
-
-        var kernel = builder.Build();
-        _embedder = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
-
-        // nomic-embed-text is 768-dim. We learn the true size lazily on first call.
-        _vectorSize = 768;
+        _http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(
+                "Bearer",
+                apiKey);
     }
 
-    public int VectorSize => _vectorSize;
 
-    public async Task<ReadOnlyMemory<float>> EmbedAsync(string text, CancellationToken ct = default)
+    public int VectorSize => 768;
+
+
+    public async Task<ReadOnlyMemory<float>> EmbedAsync(
+        string text,
+        CancellationToken ct = default)
     {
         try
         {
-            var vectors = await _embedder.GenerateEmbeddingsAsync(new[] { text }, cancellationToken: ct);
-            if (vectors is null || vectors.Count == 0)
-                throw new InvalidOperationException("Embedding service returned no vectors.");
-            return vectors[0];
+            var body = new
+            {
+                model = "nomic-embed-text-v1.5",
+                input = new[]
+                {
+                    text
+                }
+            };
+
+
+            var response =
+                await _http.PostAsJsonAsync(
+                    "/embeddings",
+                    body,
+                    ct);
+
+
+            response.EnsureSuccessStatusCode();
+
+
+            var result =
+                await response.Content.ReadFromJsonAsync<NomicResponse>(ct);
+
+
+            return result!
+                .data[0]
+                .embedding;
+
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating individual embedding vector from Semantic Kernel.");
+            _logger.LogError(
+                ex,
+                "Embedding generation failed");
+
             throw;
         }
     }
 
-    public async Task<IReadOnlyList<ReadOnlyMemory<float>>> EmbedBatchAsync(IEnumerable<string> texts, CancellationToken ct = default)
+
+    public async Task<IReadOnlyList<ReadOnlyMemory<float>>> EmbedBatchAsync(
+        IEnumerable<string> texts,
+        CancellationToken ct = default)
     {
-        try
+        var result = new List<ReadOnlyMemory<float>>();
+
+        foreach (var text in texts)
         {
-            var list = texts.ToList();
-            var vectors = await _embedder.GenerateEmbeddingsAsync(list, cancellationToken: ct);
-            return vectors?.ToList() ?? new List<ReadOnlyMemory<float>>();
+            result.Add(
+                await EmbedAsync(text, ct));
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating batch embeddings from Semantic Kernel.");
-            throw;
-        }
+
+        return result;
     }
 
-    // FIX: Created an authenticating HttpClient that attaches the Bearer token for Nomic Cloud API
-    private static HttpClient CreateHttpClient(string baseUrl, string apiKey)
+
+    private class NomicResponse
     {
-        var http = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        public List<DataItem> data { get; set; } = new();
+    }
 
-        if (!string.IsNullOrEmpty(apiKey) && apiKey != "ollama-local")
-        {
-            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-        }
 
-        return http;
+    private class DataItem
+    {
+        public float[] embedding { get; set; } = Array.Empty<float>();
     }
 }
