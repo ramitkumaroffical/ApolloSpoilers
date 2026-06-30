@@ -26,7 +26,8 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
 
         _http = new HttpClient();
 
-        _http.BaseAddress = new Uri(baseUrl);
+        _http.BaseAddress = new Uri(
+            baseUrl.TrimEnd('/') + "/");
 
         _http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue(
@@ -56,7 +57,7 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
 
             var response =
                 await _http.PostAsJsonAsync(
-                    "/embeddings",
+                    "embeddings",
                     body,
                     ct);
 
