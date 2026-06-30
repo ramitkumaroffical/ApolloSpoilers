@@ -22,11 +22,10 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
 
         if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri))
             throw new InvalidOperationException(
-                $"Invalid Ai:Embedding:BaseUrl value: '{baseUrl}'.");
+                $"Invalid Ai:Embedding:BaseUrl value: '{baseUrl}'. It must be an absolute URI like 'https://api-atlas.nomic.ai/v1'.");
 
         if (string.IsNullOrWhiteSpace(apiKey))
-            throw new InvalidOperationException(
-                "Ai:Embedding:ApiKey is missing or empty.");
+            throw new InvalidOperationException("Ai:Embedding:ApiKey is missing or empty.");
 
         _http = new HttpClient
         {
@@ -61,12 +60,17 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
 
             var body = new
             {
-                model = "nomic-embed-text-v1.5",
+                model = "nomic-embed-text",
                 texts = textArray,
                 task_type = "search_document"
             };
 
-            using var response = await _http.PostAsJsonAsync("embedding/text", body, ct);
+            using var request = new HttpRequestMessage(HttpMethod.Post, "embedding/text")
+            {
+                Content = JsonContent.Create(body)
+            };
+
+            using var response = await _http.SendAsync(request, ct);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -76,7 +80,7 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
                     response.StatusCode,
                     errorText);
 
-                response.EnsureSuccessStatusCode();
+                throw new HttpRequestException($"Embedding API failed: {response.StatusCode}");
             }
 
             var result = await response.Content.ReadFromJsonAsync<NomicResponse>(ct);

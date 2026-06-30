@@ -12,11 +12,6 @@ using Microsoft.Extensions.Logging;
 
 namespace ApolloSpoilers.Infrastructure.Ai;
 
-/// <summary>
-/// Aasra — Apollo Spoilers' AI assistant. Orchestrates the full RAG pipeline:
-/// embed user query → search Qdrant → assemble prompt with retrieved context →
-/// generate answer via Semantic Kernel LLM → persist the conversation turn.
-/// </summary>
 public class AasraChatService : IAasraChatService
 {
     private const string SystemPersona = """
@@ -67,6 +62,16 @@ public class AasraChatService : IAasraChatService
         SendMessageDto dto,
         CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(dto.Message))
+        {
+            return Result.Success(new ChatResponseDto
+            {
+                SessionId = Guid.Empty,
+                Answer = "Message cannot be empty.",
+                Sources = Array.Empty<ChatSourceDto>()
+            });
+        }
+
         ChatSession? session = null;
 
         if (userId.HasValue)
