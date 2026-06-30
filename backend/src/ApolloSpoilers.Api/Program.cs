@@ -133,6 +133,7 @@ builder.Services.AddSingleton<ILlmService, SemanticKernelLlmService>();
 builder.Services.AddScoped<IProductIndexer, ProductIndexer>();
 builder.Services.AddScoped<IAasraChatService, AasraChatService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
