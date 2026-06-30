@@ -1,3 +1,4 @@
+using System.Globalization; // Added for invariant formatting
 using System.Text.Json;
 using ApolloSpoilers.Application.Interfaces;
 using ApolloSpoilers.Application.Specifications;
@@ -5,7 +6,6 @@ using ApolloSpoilers.Domain.Entities;
 using ApolloSpoilers.Domain.Enums;
 using ApolloSpoilers.Domain.Interfaces;
 using ApolloSpoilers.Domain.Interfaces.Ai;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ApolloSpoilers.Infrastructure.Ai;
@@ -126,10 +126,11 @@ internal static class ProductIndexerTextBuilder
                 : $"Fits {p.CarBrand} {p.CarModel}"
         };
 
+        // FIX: Added CultureInfo.InvariantCulture to ensure uniform price string formatting on Render/Linux
         return $"""
         Product: {p.Name}
         Category: {p.Category?.Name ?? "Uncategorized"}
-        Price: ${p.Price:F2}
+        Price: ${p.Price.ToString("F2", CultureInfo.InvariantCulture)}
         {fit}
         Material: {p.Material ?? "n/a"}
         Color/Finish: {p.Color ?? "n/a"}

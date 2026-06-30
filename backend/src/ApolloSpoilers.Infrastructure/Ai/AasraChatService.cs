@@ -97,7 +97,11 @@ public class AasraChatService : IAasraChatService
             // 2. RAG retrieval
             await _vectorStore.EnsureCollectionAsync(_embedder.VectorSize, ct);
             var queryVector = await _embedder.EmbedAsync(dto.Message, ct);
-            var topK = int.Parse(_config["Ai:Chat:TopK"] ?? "5");
+
+            // FIX: Added environment variable compatibility for TopK configuration
+            var topKStr = _config["Ai__Chat__TopK"] ?? _config["Ai:Chat:TopK"] ?? "5";
+            var topK = int.Parse(topKStr);
+
             var hits = await _vectorStore.SearchAsync(queryVector, topK, ct);
 
             sources = hits.Select(h => new ChatSourceDto
@@ -175,7 +179,10 @@ public class AasraChatService : IAasraChatService
         var session = (await _uow.Repository<ChatSession>().ListAsync(new ChatSessionByIdSpecification(sessionId), ct)).FirstOrDefault();
         if (session is null) return Array.Empty<LlmMessage>();
 
-        var historyCount = int.Parse(_config["Ai:Chat:HistoryMessages"] ?? "10");
+        // FIX: Added environment variable compatibility for history messages configuration
+        var historyCountStr = _config["Ai__Chat__HistoryMessages"] ?? _config["Ai:Chat:HistoryMessages"] ?? "10";
+        var historyCount = int.Parse(historyCountStr);
+
         return session.Messages
             .OrderByDescending(m => m.CreatedAt)
             .Take(historyCount)

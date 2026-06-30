@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Embeddings;
+using System.Net.Http.Headers;
 
 namespace ApolloSpoilers.Infrastructure.Ai;
 
@@ -20,12 +21,24 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
     public SemanticKernelEmbeddingService(IConfiguration config, ILogger<SemanticKernelEmbeddingService> logger)
     {
         _logger = logger;
-        var baseUrl = config["Ai:Embedding:BaseUrl"] ?? config["Ai:Llm:BaseUrl"] ?? "http://localhost:11434/v1";
-        var apiKey = config["Ai:Embedding:ApiKey"] ?? config["Ai:Llm:ApiKey"] ?? "ollama-local";
-        var model = config["Ai:Embedding:Model"] ?? "nomic-embed-text";
+
+        // FIX: Added Environment Variables compatibility (Double Underscores fallback)
+        var baseUrl = config["Ai__Embedding__BaseUrl"] ?? config["Ai:Embedding:BaseUrl"] ??
+                      config["Ai__Llm__BaseUrl"] ?? config["Ai:Llm:BaseUrl"] ?? "https://api-atlas.nomic.ai/v1";
+
+        var apiKey = config["Ai__Embedding__ApiKey"] ?? config["Ai:Embedding:ApiKey"] ??
+                     config["Ai__Llm__ApiKey"] ?? config["Ai:Llm:ApiKey"] ?? "ollama-local";
+
+        var model = config["Ai__Embedding__Model"] ?? config["Ai:Embedding:Model"] ?? "nomic-embed-text-v1.5";
 
         var builder = Kernel.CreateBuilder();
-        builder.AddOpenAITextEmbeddingGeneration(modelId: model, apiKey: apiKey, httpClient: CreateHttpClient(baseUrl));
+
+        // FIX: Passing the authenticating HTTP Client required for Nomic Cloud
+        builder.AddOpenAITextEmbeddingGeneration(
+            modelId: model,
+            apiKey: apiKey,
+            httpClient: CreateHttpClient(baseUrl, apiKey));
+
         var kernel = builder.Build();
         _embedder = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
 
@@ -37,22 +50,45 @@ public class SemanticKernelEmbeddingService : IEmbeddingService
 
     public async Task<ReadOnlyMemory<float>> EmbedAsync(string text, CancellationToken ct = default)
     {
-        var vectors = await _embedder.GenerateEmbeddingsAsync(new[] { text }, cancellationToken: ct);
-        if (vectors is null || vectors.Count == 0)
-            throw new InvalidOperationException("Embedding service returned no vectors.");
-        return vectors[0];
+        try
+        {
+            var vectors = await _embedder.GenerateEmbeddingsAsync(new[] { text }, cancellationToken: ct);
+            if (vectors is null || vectors.Count == 0)
+                throw new InvalidOperationException("Embedding service returned no vectors.");
+            return vectors[0];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating individual embedding vector from Semantic Kernel.");
+            throw;
+        }
     }
 
     public async Task<IReadOnlyList<ReadOnlyMemory<float>>> EmbedBatchAsync(IEnumerable<string> texts, CancellationToken ct = default)
     {
-        var list = texts.ToList();
-        var vectors = await _embedder.GenerateEmbeddingsAsync(list, cancellationToken: ct);
-        return vectors?.ToList() ?? new List<ReadOnlyMemory<float>>();
+        try
+        {
+            var list = texts.ToList();
+            var vectors = await _embedder.GenerateEmbeddingsAsync(list, cancellationToken: ct);
+            return vectors?.ToList() ?? new List<ReadOnlyMemory<float>>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating batch embeddings from Semantic Kernel.");
+            throw;
+        }
     }
 
-    private static HttpClient CreateHttpClient(string baseUrl)
+    // FIX: Created an authenticating HttpClient that attaches the Bearer token for Nomic Cloud API
+    private static HttpClient CreateHttpClient(string baseUrl, string apiKey)
     {
         var http = new HttpClient { BaseAddress = new Uri(baseUrl) };
+
+        if (!string.IsNullOrEmpty(apiKey) && apiKey != "ollama-local")
+        {
+            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        }
+
         return http;
     }
 }

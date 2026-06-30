@@ -18,31 +18,38 @@ public class QdrantVectorStore : IVectorStore
 
     public QdrantVectorStore(IConfiguration config, ILogger<QdrantVectorStore> logger)
     {
-        var endpoint = config["Ai:Qdrant:Endpoint"]
-                             ?? "http://localhost:6333";
+        _logger = logger;
+
+        // FIX: Environment variables compatibility for Qdrant Endpoint
+        var endpoint = config["Ai__Qdrant__Endpoint"]
+                       ?? config["Ai:Qdrant:Endpoint"]
+                       ?? "http://localhost:6333";
 
         var uri = new Uri(endpoint);
+        bool isHttps = uri.Scheme == "https";
 
-        int grpcPort = 6334;
+        // FIX: Cloud Qdrant usually works on standard gRPC port 443 over HTTPS, local usually on 6334
+        int defaultPort = isHttps ? 443 : 6334;
+        int grpcPort = defaultPort;
 
-        if (int.TryParse(config["Ai:Qdrant:Port"], out var configuredGrpcPort)
-            && configuredGrpcPort > 0)
+        var portConfigStr = config["Ai__Qdrant__Port"] ?? config["Ai:Qdrant:Port"];
+        if (int.TryParse(portConfigStr, out var configuredGrpcPort) && configuredGrpcPort > 0)
         {
             grpcPort = configuredGrpcPort;
         }
 
-        var apiKey = config["Ai:Qdrant:ApiKey"];
+        // FIX: Environment variables compatibility for API Key
+        var apiKey = config["Ai__Qdrant__ApiKey"] ?? config["Ai:Qdrant:ApiKey"];
 
         _client = new QdrantClient(
             host: uri.Host,
             port: grpcPort,
-            https: uri.Scheme == "https",
+            https: isHttps,
             apiKey: apiKey
         );
 
-        _collection = config["Ai:Qdrant:Collection"] ?? "apollo_products";
-        _logger = logger;
-
+        // FIX: Environment variables compatibility for Collection name
+        _collection = config["Ai__Qdrant__Collection"] ?? config["Ai:Qdrant:Collection"] ?? "apollo_products";
     }
 
     public async Task EnsureCollectionAsync(int vectorSize, CancellationToken ct = default)
@@ -137,8 +144,6 @@ public class QdrantVectorStore : IVectorStore
     }
 
     // --- Value conversion helpers ---
-    // Value has implicit operators from string, long, bool, double only.
-
     private static Value ToValue(object o) => o switch
     {
         string s => s,
