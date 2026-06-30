@@ -81,15 +81,31 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // ---------- CORS Configuration ----------
-var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? new[] { "http://localhost:4200" };
+
+var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
+    ?? new[]
+    {
+        "http://localhost:4200",
+        "https://apollospoilers.com",
+        "https://www.apollospoilers.com"
+    };
+
 builder.Services.AddCors(o => o.AddPolicy("ApolloCors", policy =>
-    policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
+{
+    policy
+        .WithOrigins(origins)
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+}));
+
 
 // ---------- AutoMapper, validators ----------
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
+
 
 // ---------- Unit of Work & domain services ----------
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -117,3 +133,15 @@ builder.Services.AddSingleton<ILlmService, SemanticKernelLlmService>();
 builder.Services.AddScoped<IProductIndexer, ProductIndexer>();
 builder.Services.AddScoped<IAasraChatService, AasraChatService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+var app = builder.Build();
+app.UseHttpsRedirection();
+
+app.UseCors("ApolloCors");
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+
