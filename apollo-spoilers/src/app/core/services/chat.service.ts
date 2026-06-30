@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { Observable } from 'rxjs';;
 import { ChatResponse, ChatMessage } from '../models/models';
 import { SKIP_LOADING } from './loading.service';
+import { environment } from '../../../environments/environment.prod';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {

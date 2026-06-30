@@ -13,10 +13,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Order, OrderStatus } from '../../../core/models/models';
+import { environment } from '../../../../environments/environment.prod';
 
 interface AdminProduct {
   id: string; name: string; price: number; stockQuantity: number; isActive: boolean; slug: string;

@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+
 import {
   ProductDetail, ProductListItem, CreateProductRequest, UpdateProductRequest,
   ProductImage, ImageUploadResponse, PagedResult
 } from '../models/models';
+import { environment } from '../../../environments/environment.prod';
 
 @Injectable({ providedIn: 'root' })
 export class ProductAdminService {
