@@ -25,6 +25,8 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+
 // ---------- Serilog ----------
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -33,6 +35,22 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File("logs/apollo-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 builder.Host.UseSerilog();
+
+builder.Services.AddControllers();
+
+var app = builder.Build();
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://0.0.0.0:{port}");
+
+app.UseHttpsRedirection();
+
+app.UseCors("ApolloCors");
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
 
 // ---------- DbContext ----------
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -135,14 +153,5 @@ builder.Services.AddScoped<IAasraChatService, AasraChatService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddControllers();
 
-var app = builder.Build();
-app.UseHttpsRedirection();
-
-app.UseCors("ApolloCors");
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
 
 
