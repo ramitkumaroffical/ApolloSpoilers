@@ -176,16 +176,4 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       },
     });
   }
-
-  getImageUrl(url: string | null | undefined): string {
-    if (!url) return '/assets/placeholder.svg';
-
-    // Agar URL pehle se absolute hai (http:// ya https:// se start hota hai)
-    if (/^https?:\/\//.test(url)) {
-      return url;
-    }
-
-    // Warna relative path hai, base URL prepend karo
-    return `${environment.imageUrl}${url.startsWith('/') ? '' : '/'}${url}`;
-  }
 }
