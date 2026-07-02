@@ -8,6 +8,8 @@ public class Product : BaseEntity
     public string Slug { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 
+    public string? ImageUrl { get; set; }
+
     public decimal Price { get; set; }
     public decimal? CompareAtPrice { get; set; }
     public string? Material { get; set; }

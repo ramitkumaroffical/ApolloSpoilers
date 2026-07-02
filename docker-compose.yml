@@ -1,5 +1,4 @@
 name: apollo-spoilers
-
 services:
   # ---------- SQL Server 2022 ----------
   sqlserver:
@@ -35,10 +34,6 @@ services:
       - apollo-net
 
   # ---------- Ollama (local OpenAI-compatible LLM) ----------
-  # Optional: comment out if using Groq/OpenAI remotely.
-  # After `docker compose up`, run once to pull the models:
-  #   docker exec -it apollo-ollama ollama pull llama3
-  #   docker exec -it apollo-ollama ollama pull nomic-embed-text
   ollama:
     image: ollama/ollama:latest
     container_name: apollo-ollama
@@ -79,6 +74,10 @@ services:
       Email__FromName: ${Email__FromName:-Apollo Spoilers}
       Email__EnableSsl: ${Email__EnableSsl:-true}
       App__FrontendUrl: ${App__FrontendUrl:-http://localhost:4200}
+      # ---------- Cloudinary ----------
+      Cloudinary__CloudName: ${Cloudinary__CloudName:-nirwwwog}
+      Cloudinary__ApiKey: ${Cloudinary__ApiKey:-216113381115922}
+      Cloudinary__ApiSecret: ${Cloudinary__ApiSecret:-MPtpPLPEcmHdqc_tYgpGIaklcAk}
     ports:
       - "8080:8080"
     networks:

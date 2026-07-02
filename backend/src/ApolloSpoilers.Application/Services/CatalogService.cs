@@ -80,4 +80,23 @@ public class CatalogService : ICatalogService
             .OrderBy(m => m)
             .ToList();
     }
+
+    public async Task<Result<ProductImageResultDto>> UpdateProductImageAsync(Guid productId, string imageUrl, CancellationToken ct)
+    {
+        var productRepo = _uow.Repository<Product>();
+        var spec = new ProductByIdSpecification(productId);
+        var product = (await productRepo.ListAsync(spec, ct)).FirstOrDefault();
+
+        if (product is null)
+            return Result.Failure<ProductImageResultDto>("Product not found.", "NOT_FOUND");
+
+        product.ImageUrl = imageUrl;
+        await _uow.SaveChangesAsync(ct);
+
+        return Result.Success(new ProductImageResultDto
+        {
+            ProductId = productId,
+            ImageUrl = imageUrl
+        });
+    }
 }

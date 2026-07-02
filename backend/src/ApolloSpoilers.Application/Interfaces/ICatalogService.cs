@@ -11,6 +11,7 @@ public interface ICatalogService
     Task<IReadOnlyList<CategoryDto>> ListCategoriesAsync(CancellationToken ct = default);
     Task<IReadOnlyList<string>> ListCarBrandsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<string>> ListCarModelsAsync(string carBrand, CancellationToken ct = default);
+    Task<Result<ProductImageResultDto>> UpdateProductImageAsync(Guid productId, string imageUrl, CancellationToken ct);
 }
 
 public interface IProductAdminService

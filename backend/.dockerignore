@@ -6,21 +6,29 @@ obj/
 *.userosscache
 *.sln.docstates
 
-# Tests
-*.Tests/
-**/Tests/
-**/*Test*/
-*.Test.csproj
+# VS Code
+.vscode/
+*.code-workspace
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile*
+.dockerignore
 
 # Documentation
 README.md
 *.md
 .github/
 
-# Git
-.git/
-.gitignore
-.gitattributes
+# Tests
+*.Tests/
+**/Tests/
+**/*Test*/
+*.Test.csproj
 
 # Build outputs
 *.cache
@@ -38,10 +46,6 @@ README.md
 *.sdf
 *.cachefile
 
-# VS Code
-.vscode/
-*.code-workspace
-
 # IDE
 .vs/
 .idea/
@@ -58,15 +62,6 @@ __pycache__/
 *.pyc
 __pycache__/
 
-# Environment files (keep .env.example for reference)
-.env
-.env.local
-.env.*.local
-
-# Logs
-logs/
-*.log
-
 # NuGet
 *.nupkg
 *.snupkg
@@ -74,21 +69,16 @@ logs/
 *.csproj.nuget.dgspec.json
 *.csproj.nuget.targets
 
+# Environment files (keep .env.example for reference)
+.env
+.env.local
+.env.*.local
+
 # Debug
 *.dil
 *.dll
 *.exe
 
-# Code coverage
-*.coverage
-*.coveragexml
-*.coveragereport/
-
-# Analysis
-*.analyzers
-
-# Keep only necessary files
-!*.csproj
-!*.sln
-!Dockerfile
-!Dockerfile.prod
+# Logs
+logs/
+*.log

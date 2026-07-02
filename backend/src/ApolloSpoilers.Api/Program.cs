@@ -181,6 +181,7 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IImageStorageService, CloudinaryImageStorageService>();
 
 
 
@@ -338,5 +339,33 @@ app.MapGet("/",
     status = "running"
 });
 
+// Health check endpoint for Render/Pingdom monitoring
+app.MapGet("/health", (IConfiguration config) =>
+{
+    var environment = app.Environment.EnvironmentName;
+    var services = new
+    {
+        environment,
+        uptime = DateTime.UtcNow,
+        jwtExpirationMinutes = config["Jwt:AccessTokenExpirationMinutes"] ?? config["Jwt__AccessTokenExpirationMinutes"] ?? "15",
+        llmBaseUrl = config["Ai:Llm:BaseUrl"] ?? config["Ai__Llm__BaseUrl"] ?? "not configured",
+        embeddingBaseUrl = config["Ai:Embedding:BaseUrl"] ?? config["Ai__Embedding__BaseUrl"] ?? "not configured",
+        qdrantEndpoint = config["Ai:Qdrant:Endpoint"] ?? config["Ai__Qdrant__Endpoint"] ?? "not configured",
+        qdrantCollection = config["Ai:Qdrant:Collection"] ?? config["Ai__Qdrant__Collection"] ?? "not configured",
+        corsOrigins = config.GetSection("Cors:Origins").Get<string[]>() ?? config.GetSection("Cors__Origins").Get<string[]>() ?? Array.Empty<string>()
+    };
+
+    return Results.Ok(new
+    {
+        status = "healthy",
+        timestamp = DateTime.UtcNow,
+        services,
+        message = environment == "Production"
+            ? "All systems operational"
+            : "Development mode - systems may not be fully configured"
+    });
+})
+.WithName("HealthCheck")
+.WithOpenApi();
 
 app.Run();

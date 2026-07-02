@@ -1,0 +1,108 @@
+services:
+  - type: web
+    name: apollo-api
+    env: docker
+    plan: free
+    dockerContext: ./src/ApolloSpoilers.Api
+    dockerfilePath: ./src/ApolloSpoilers.Api/Dockerfile
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:8080
+      - key: Jwt__Secret
+        value: ApolloSpoilersAI@2026#SecureJwtKey_088806660111_LongSecret
+      - key: Jwt__Issuer
+        value: AI.DocumentAssistant
+      - key: Jwt__Audience
+        value: AI.Users
+      - key: Jwt__AccessTokenExpirationMinutes
+        value: "60"
+      - key: Jwt__RefreshTokenExpirationDays
+        value: "7"
+      - key: Ai__Llm__BaseUrl
+        value: https://api.groq.com/openai/v1
+      - key: Ai__Llm__ApiKey
+        value: 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
+      - key: Ai__Llm__Model
+        value: llama-3.3-70b-versatile
+      - key: Ai__Embedding__BaseUrl
+        value: http://apollo-ollama.onrender.com/v1
+      - key: Ai__Embedding__Model
+        value: nomic-embed-text
+      - key: Ai__Embedding__ApiKey
+        value: ollama-local
+      - key: Ai__Qdrant__Endpoint
+        value: https://6e112723-fd6b-4ebc-8ff6-5ca1dfd1c255.eu-central-1-0.aws.cloud.qdrant.io
+      - key: Ai__Qdrant__Collection
+        value: apollo_products_v2
+      - key: Ai__Chat__TopK
+        value: "5"
+      - key: Ai__Chat__HistoryMessages
+        value: "10"
+      - key: Ai__Chat__TimeoutSeconds
+        value: "300"
+      - key: ConnectionStrings__DefaultConnection
+        value: Server=apollospoilers-dev-sql.database.windows.net;Initial Catalog=ApolloSpoilers;User ID=ramitadmin;Password=Enlightened*123!@#;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+      - key: Cors__Origins__0
+        value: https://www.apollospoilers.com
+      - key: App__FrontendUrl
+        value: https://www.apollospoilers.com
+      - key: Email__Host
+        value: smtp.example.com
+      - key: Email__Port
+        value: "587"
+      - key: Email__From
+        value: no-reply@apollospoilers.com
+      - key: Email__FromName
+        value: Apollo Spoilers
+      - key: Email__EnableSsl
+        value: "true"
+
+    healthCheckPath: /health
+    healthCheckTimeout: 60
+    healthCheckMaxAttempts: 10
+
+    disk:
+      name: tmp
+      mountPath: /tmp
+      sizeGB: 1
+
+    numInstances: 1
+    envVars:
+      - key: PORT
+        value: "8080"
+
+    # Network and routes configuration
+    routes:
+      - routes:
+          - api.apollospoilers.com/*
+
+  - type: worker
+    name: apollo-ollama
+    env: docker
+    plan: free
+    dockerContext: ./backend
+    dockerfilePath: ./backend/src/ApolloSpoilers.Api/Dockerfile
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Ai__Llm__BaseUrl
+        value: https://api.groq.com/openai/v1
+      - key: Ai__Llm__ApiKey
+        value: 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
+      - key: Ai__Llm__Model
+        value: llama-3.3-70b-versatile
+      - key: Ai__Embedding__BaseUrl
+        value: http://localhost:11434/v1
+      - key: Ai__Embedding__Model
+        value: nomic-embed-text
+      - key: Ai__Qdrant__Endpoint
+        value: https://6e112723-fd6b-4ebc-8ff6-5ca1dfd1c255.eu-central-1-0.aws.cloud.qdrant.io
+      - key: Ai__Qdrant__Collection
+        value: apollo_products_v2
+    healthCheckPath: /health
+    healthCheckTimeout: 60
+    healthCheckMaxAttempts: 10
+
+    numInstances: 1
