@@ -6,35 +6,36 @@
 } @else if (product(); as p) {
 <button mat-button routerLink="/" class="back-btn"><mat-icon>arrow_back</mat-icon> Back to shop</button>
 
-<div class="detail-grid">
-  <div class="images">
-    <div class="main-img-wrap">
-      @if (discountPercent() > 0) {
-      <span class="discount-badge-detail">-{{ discountPercent() }}%</span>
-      }
-      @if (p.images.length > 1) {
-      <div class="thumbs">
-        @for (img of p.images; track img.id) {
-        <div class="thumb-wrap" [class.active]="selectedImage() === img.imageUrl"
-          (click)="selectedImage.set(img.imageUrl)">
-          <img [src]="getImageUrl(img.imageUrl)" [alt]="img.altText || p.name" class="thumb"
-            (load)="$event.target.classList.add('loaded')" (error)="$event.target.src = '/assets/placeholder.svg'">
-        </div>
-        }
-      </div>
-      }
-    </div>
-    @if (p.images.length > 1) {
-    <div class="thumbs">
-      @for (img of p.images; track img.id) {
-      <div class="thumb-wrap" [class.active]="selectedImage() === img.imageUrl"
-        (click)="selectedImage.set(img.imageUrl)">
-        <img [src]="environment.imageUrl + img.imageUrl" [alt]="img.altText || p.name" class="thumb"
-          (load)="$event.target.classList.add('loaded')" (error)="$event.target.src = '/assets/placeholder.svg'">
-      </div>
-      }
+<<div class="images">
+  <div class="main-img-wrap">
+    @if (discountPercent() > 0) {
+    <span class="discount-badge-detail">-{{ discountPercent() }}%</span>
+    }
+    <img [src]="getImageUrl(selectedImage())" [alt]="p.name" class="main-img"
+      (error)="$event.target.src = '/assets/placeholder.svg'">
+  </div>
+
+  @if (p.images.length > 1) {
+  <div class="thumbs">
+    @for (img of p.images; track img.id) {
+    <div class="thumb-wrap" [class.active]="selectedImage() === img.imageUrl" (click)="selectedImage.set(img.imageUrl)">
+      <img [src]="getImageUrl(img.imageUrl)" [alt]="img.altText || p.name" class="thumb"
+        (load)="$event.target.classList.add('loaded')" (error)="$event.target.src = '/assets/placeholder.svg'">
     </div>
     }
+  </div>
+  }
+  </div>
+  @if (p.images.length > 1) {
+  <div class="thumbs">
+    @for (img of p.images; track img.id) {
+    <div class="thumb-wrap" [class.active]="selectedImage() === img.imageUrl" (click)="selectedImage.set(img.imageUrl)">
+      <img [src]="environment.imageUrl + img.imageUrl" [alt]="img.altText || p.name" class="thumb"
+        (load)="$event.target.classList.add('loaded')" (error)="$event.target.src = '/assets/placeholder.svg'">
+    </div>
+    }
+  </div>
+  }
   </div>
 
   <div class="info">
@@ -78,25 +79,25 @@
       </button>
     </div>
   </div>
-</div>
+  </div>
 
-<section class="reviews-section">
-  <h2>Customer Reviews</h2>
-  @if (reviews().length === 0) {
-  <p class="empty">No reviews yet. Be the first to review!</p>
+  <section class="reviews-section">
+    <h2>Customer Reviews</h2>
+    @if (reviews().length === 0) {
+    <p class="empty">No reviews yet. Be the first to review!</p>
+    } @else {
+    @for (rev of reviews(); track rev.id) {
+    <mat-card class="review-card">
+      <div class="review-head">
+        <strong>{{ rev.authorName }}</strong>
+        <span class="stars">{{ '★'.repeat(rev.rating) }}{{ '☆'.repeat(5 - rev.rating) }}</span>
+        <span class="date">{{ rev.createdAt | date:'mediumDate' }}</span>
+      </div>
+      <p>{{ rev.comment }}</p>
+    </mat-card>
+    }
+    }
+  </section>
   } @else {
-  @for (rev of reviews(); track rev.id) {
-  <mat-card class="review-card">
-    <div class="review-head">
-      <strong>{{ rev.authorName }}</strong>
-      <span class="stars">{{ '★'.repeat(rev.rating) }}{{ '☆'.repeat(5 - rev.rating) }}</span>
-      <span class="date">{{ rev.createdAt | date:'mediumDate' }}</span>
-    </div>
-    <p>{{ rev.comment }}</p>
-  </mat-card>
+  <div class="empty">Product not found.</div>
   }
-  }
-</section>
-} @else {
-<div class="empty">Product not found.</div>
-}
