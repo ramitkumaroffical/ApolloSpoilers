@@ -204,7 +204,8 @@ builder.Services.AddScoped<ProductPrimaryImageResolver>();
         <IEmbeddingService, OllamaEmbeddingService>(sp =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
-            return new OllamaEmbeddingService(config);
+            var logger = sp.GetRequiredService<ILogger<OllamaEmbeddingService>>();
+            return new OllamaEmbeddingService(config, logger);
         });
 
 

@@ -97,6 +97,24 @@ public class AasraChatService : IAasraChatService
             // 2. RAG retrieval
             await _vectorStore.EnsureCollectionAsync(_embedder.VectorSize, ct);
             var queryVector = await _embedder.EmbedAsync(dto.Message, ct);
+
+            // If embedding failed or returned empty vector, provide a fallback response
+            if (queryVector.Length == 0)
+            {
+                _logger.LogWarning("Embedding failed, providing fallback response without RAG");
+
+                var fallbackMessage = $"I apologize, but I'm having trouble accessing my knowledge base right now. " +
+                                      "Please try again in a moment, or browse our catalog manually. " +
+                                      "If this issue persists, please contact support.";
+
+                return Result.Success(new ChatResponseDto
+                {
+                    SessionId = session?.Id ?? Guid.Empty,
+                    Answer = fallbackMessage,
+                    Sources = Array.Empty<ChatSourceDto>()
+                });
+            }
+
             var topK = int.Parse(_config["Ai:Chat:TopK"] ?? "5");
             var hits = await _vectorStore.SearchAsync(queryVector, topK, ct);
 
