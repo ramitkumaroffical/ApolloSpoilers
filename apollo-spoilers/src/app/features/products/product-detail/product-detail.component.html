@@ -12,26 +12,15 @@
       @if (discountPercent() > 0) {
       <span class="discount-badge-detail">-{{ discountPercent() }}%</span>
       }
-      <div class="images">
-        <div class="two-img-grid">
-          @for (img of p.images.slice(0, 2); track img.id; let i = $index) {
-          <div class="img-wrap" [class.primary]="i === 0">
-            @if (i === 0 && discountPercent() > 0) {
-            <span class="discount-badge-detail">-{{ discountPercent() }}%</span>
-            }
-            <img [src]="resolveImageUrl(img.imageUrl)" [alt]="img.altText || p.name" class="detail-img"
-              (load)="$event.target.classList.add('loaded')" (error)="$event.target.src = '/assets/placeholder.svg'">
-          </div>
-          }
-        </div>
-      </div>
+      <img [src]="resolveImageUrl(selectedImage())" [alt]="p.name" class="main-img"
+        (load)="$event.target.classList.add('loaded')" (error)="$event.target.src = '/assets/placeholder.svg'">
     </div>
     @if (p.images.length > 1) {
     <div class="thumbs">
       @for (img of p.images; track img.id) {
       <div class="thumb-wrap" [class.active]="selectedImage() === img.imageUrl"
         (click)="selectedImage.set(img.imageUrl)">
-        <img [src]="environment.imageUrl + img.imageUrl" [alt]="img.altText || p.name" class="thumb"
+        <img [src]="resolveImageUrl(img.imageUrl)" [alt]="img.altText || p.name" class="thumb"
           (load)="$event.target.classList.add('loaded')" (error)="$event.target.src = '/assets/placeholder.svg'">
       </div>
       }

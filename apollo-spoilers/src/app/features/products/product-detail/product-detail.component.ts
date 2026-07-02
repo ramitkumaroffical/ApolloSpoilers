@@ -178,10 +178,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   }
 
   resolveImageUrl(path: string | null | undefined): string {
-  if (!path) return '/assets/placeholder.svg';
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path; // already a full URL (e.g. Cloudinary)
+    if (!path) return '/assets/placeholder.svg';
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path; // already a full Cloudinary URL
+    }
+    return environment.imageUrl + path;
   }
-  return environment.imageUrl + path;
-}
+
 }
