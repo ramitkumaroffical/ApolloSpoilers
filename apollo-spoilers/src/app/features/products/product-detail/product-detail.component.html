@@ -12,9 +12,7 @@
         @if (discountPercent() > 0) {
           <span class="discount-badge-detail">-{{ discountPercent() }}%</span>
         }
-        <img [src]="environment.imageUrl + (selectedImage() || '')" [alt]="p.name" class="main-img"
-             (load)="$event.target.classList.add('loaded')"
-             (error)="$event.target.src = '/assets/placeholder.svg'">
+        <img [src]="getImageUrl(selectedImage())" [alt]="p.name" class="main-img" ...>
       </div>
       @if (p.images.length > 1) {
         <div class="thumbs">

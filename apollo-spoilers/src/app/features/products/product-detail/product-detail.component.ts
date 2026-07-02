@@ -176,4 +176,16 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  getImageUrl(url?: string | null): string {
+    if (!url) {
+      return '/assets/placeholder.svg';
+    }
+
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    return environment.imageUrl + url;
+  }
 }
