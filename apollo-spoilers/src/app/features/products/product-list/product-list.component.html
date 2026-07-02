@@ -82,7 +82,7 @@
           @if (p.isFeatured) {
           <span class="featured-tag">Hot Deal</span>
           }
-          <img [src]="environment.imageUrl + (p.primaryImageUrl || '')" [alt]="p.name" class="card-img"
+          <img [src]="getImageUrl(p.primaryImageUrl)" [alt]="p.name" class="card-img"
             (load)="$event.target.classList.add('loaded')" (error)="$event.target.src = '/assets/placeholder.svg'">
         </a>
         <mat-card-content>

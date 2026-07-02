@@ -176,4 +176,17 @@ export class ProductListComponent implements OnInit, OnDestroy {
       error: () => this.notify.error('Could not add to cart. Please try again.'),
     });
   }
+  getImageUrl(url?: string): string {
+    if (!url) {
+      return '/assets/placeholder.svg';
+    }
+
+    // Already absolute URL (Cloudinary etc.)
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    // Relative path
+    return this.environment.imageUrl + url;
+  }
 }
