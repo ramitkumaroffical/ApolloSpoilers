@@ -1,0 +1,17 @@
+# ---------- Ollama Service Dockerfile ----------
+# This Dockerfile is for the Ollama service only
+
+FROM ollama/ollama:latest
+
+ENV OLLAMA_HOST=0.0.0.0
+
+EXPOSE 11434
+
+# Copy ollama configuration
+COPY ./ollama.sh /app/ollama.sh
+
+# Make the script executable
+RUN chmod +x /app/ollama.sh
+
+# Start Ollama server in background
+CMD ["/app/ollama.sh"]
