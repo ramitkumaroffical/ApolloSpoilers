@@ -198,10 +198,14 @@ builder.Services.AddScoped<ProductPrimaryImageResolver>();
 
 
 
-// ---------- AI ----------
-// Ollama Embedding
-builder.Services.AddSingleton
-    <IEmbeddingService, OllamaEmbeddingService>();
+    // ---------- AI ----------
+    // Ollama Embedding
+    builder.Services.AddSingleton
+        <IEmbeddingService, OllamaEmbeddingService>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            return new OllamaEmbeddingService(config);
+        });
 
 
 // Qdrant

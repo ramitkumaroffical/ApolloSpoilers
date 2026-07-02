@@ -1,4 +1,5 @@
 using ApolloSpoilers.Domain.Interfaces.Ai;
+using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 
 public class OllamaEmbeddingService : IEmbeddingService
@@ -7,11 +8,12 @@ public class OllamaEmbeddingService : IEmbeddingService
 
     public int VectorSize => 768;
 
-    public OllamaEmbeddingService()
+    public OllamaEmbeddingService(IConfiguration config)
     {
+        var baseUrl = config["Ai:Embedding:BaseUrl"] ?? config["Ai__Embedding__BaseUrl"] ?? "http://localhost:11434";
         _http = new HttpClient
         {
-            BaseAddress = new Uri("http://localhost:11434")
+            BaseAddress = new Uri(baseUrl)
         };
     }
 
