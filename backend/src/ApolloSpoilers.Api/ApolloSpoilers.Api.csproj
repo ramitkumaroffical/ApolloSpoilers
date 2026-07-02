@@ -26,4 +26,8 @@
     <ProjectReference Include="..\ApolloSpoilers.Infrastructure\ApolloSpoilers.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\products\" />
+  </ItemGroup>
+
 </Project>
